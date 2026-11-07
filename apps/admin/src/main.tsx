@@ -23,7 +23,7 @@ if (!rootElement) {
   throw new Error('Failed to find root element');
 }
 
-if (!CLERK_PUBLISHABLE_KEY) {
+if (!CLERK_PUBLISHABLE_KEY || CLERK_PUBLISHABLE_KEY.includes('REPLACE_WITH_')) {
   ReactDOM.createRoot(rootElement).render(
     <div className="min-h-screen bg-slate-900 flex items-center justify-center p-6 text-white font-sans">
       <div className="max-w-md w-full bg-slate-800 p-8 rounded-lg border border-slate-700 shadow-elevated text-center space-y-4">
@@ -53,3 +53,4 @@ if (!CLERK_PUBLISHABLE_KEY) {
     </React.StrictMode>
   );
 }
+
