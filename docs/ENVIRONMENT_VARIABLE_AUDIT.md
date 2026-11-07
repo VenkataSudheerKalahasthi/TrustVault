@@ -36,3 +36,4 @@
    - Git history contains no committed real secrets or passwords.
    - All `.env` files are strictly excluded by `.gitignore`.
    - All example templates (`.env.example`) contain explicit dummy placeholders.
+
