@@ -76,7 +76,7 @@ export class PermissionsService {
           grantedBy: { select: { id: true, email: true } },
         },
       });
-    });
+    }, { timeout: 15000, maxWait: 10000 });
 
     // 3. Record Audit Event
     await logAuditEvent({

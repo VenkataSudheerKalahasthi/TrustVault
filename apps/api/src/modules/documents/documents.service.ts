@@ -78,7 +78,7 @@ export class DocumentsService {
       });
 
       return doc;
-    });
+    }, { timeout: 15000, maxWait: 10000 });
 
     // 4. Record audit event
     await logAuditEvent({
@@ -315,7 +315,7 @@ export class DocumentsService {
       });
 
       return updatedDoc;
-    });
+    }, { timeout: 15000, maxWait: 10000 });
 
     await logAuditEvent({
       action: AuditActionType.DOCUMENT_UPDATED,
