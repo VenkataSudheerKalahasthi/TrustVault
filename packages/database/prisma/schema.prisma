@@ -1,0 +1,260 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["multiSchema"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  schemas  = ["trustvault"]
+}
+
+enum UserRole {
+  ADMIN
+  DOCUMENT_OWNER
+  VIEWER
+
+  @@schema("trustvault")
+}
+
+enum PermissionType {
+  READ
+  EDIT
+  OWNER
+
+  @@schema("trustvault")
+}
+
+enum AuditActionType {
+  DOCUMENT_UPLOADED
+  DOCUMENT_VIEWED
+  DOCUMENT_DOWNLOADED
+  DOCUMENT_UPDATED
+  DOCUMENT_DELETED
+  DOCUMENT_PERMISSION_GRANTED
+  DOCUMENT_PERMISSION_REVOKED
+  ACCESS_DENIED
+  LOGIN_SECURITY_EVENT
+  ROLE_CHANGED
+  USER_ACCESS_DISABLED
+  AI_SUGGESTION_GENERATED
+  AI_SUGGESTION_DECISION
+
+  @@schema("trustvault")
+}
+
+enum AuditResult {
+  SUCCESS
+  DENIED
+  FAILURE
+
+  @@schema("trustvault")
+}
+
+enum AISuggestionStatus {
+  PENDING
+  APPROVED
+  REJECTED
+
+  @@schema("trustvault")
+}
+
+model User {
+  id        String   @id @default(uuid()) @db.Uuid
+  clerkId   String   @unique
+  email     String   @unique
+  firstName String?
+  lastName  String?
+  imageUrl  String?
+  role      UserRole @default(VIEWER)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  ownedDocuments        Document[]           @relation("DocumentOwner")
+  permissionsReceived   DocumentPermission[] @relation("PermissionGrantee")
+  permissionsGranted    DocumentPermission[] @relation("PermissionGrantor")
+  permissionsRevoked    DocumentPermission[] @relation("PermissionRevoker")
+  auditLogsActed        AuditLog[]           @relation("AuditActor")
+  auditLogsTargeted     AuditLog[]           @relation("AuditTargetUser")
+  downloads             DownloadRecord[]     @relation("UserDownloads")
+  versionsUploaded      DocumentVersion[]    @relation("VersionUploader")
+  aiSuggestionsTargeted AISuggestion[]       @relation("AISuggestionTargetUser")
+  aiSuggestionsDecided  AISuggestion[]       @relation("AISuggestionDecider")
+
+  @@index([email])
+  @@index([clerkId])
+  @@index([role, isActive])
+  @@schema("trustvault")
+}
+
+model Category {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String   @unique
+  description String?
+  color       String   @default("#475569")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  documents   Document[]
+
+  @@schema("trustvault")
+}
+
+model Document {
+  id               String            @id @default(uuid()) @db.Uuid
+  title            String
+  description      String?
+  ownerId          String            @db.Uuid
+  categoryId       String?           @db.Uuid
+  currentVersion   Int               @default(1)
+  storagePath      String
+  originalFileName String
+  mimeType         String
+  fileSize         Int
+  fileHash         String            // SHA-256 hash of file content
+  isArchived       Boolean           @default(false)
+  isDeleted        Boolean           @default(false)
+  deletedAt        DateTime?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  // Relationships
+  owner         User                 @relation("DocumentOwner", fields: [ownerId], references: [id], onDelete: Restrict)
+  category      Category?            @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  permissions   DocumentPermission[]
+  versions      DocumentVersion[]
+  downloads     DownloadRecord[]
+  auditLogs     AuditLog[]
+  aiSuggestions AISuggestion[]
+
+  @@index([ownerId])
+  @@index([categoryId])
+  @@index([title])
+  @@index([isDeleted, isArchived])
+  @@index([createdAt])
+  @@schema("trustvault")
+}
+
+model DocumentVersion {
+  id               String   @id @default(uuid()) @db.Uuid
+  documentId       String   @db.Uuid
+  versionNumber    Int
+  storagePath      String
+  originalFileName String
+  mimeType         String
+  fileSize         Int
+  fileHash         String
+  changeSummary    String?
+  uploadedById     String   @db.Uuid
+  createdAt        DateTime @default(now())
+
+  document         Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  uploadedBy       User     @relation("VersionUploader", fields: [uploadedById], references: [id], onDelete: Restrict)
+
+  @@unique([documentId, versionNumber])
+  @@index([documentId])
+  @@schema("trustvault")
+}
+
+model DocumentPermission {
+  id               String         @id @default(uuid()) @db.Uuid
+  documentId       String         @db.Uuid
+  userId           String         @db.Uuid
+  permission       PermissionType
+  canDownload      Boolean        @default(true)
+  grantedById      String         @db.Uuid
+  grantedAt        DateTime       @default(now())
+  isRevoked        Boolean        @default(false)
+  revokedAt        DateTime?
+  revokedById      String?        @db.Uuid
+  revocationReason String?
+  expiresAt        DateTime?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  document         Document       @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  user             User           @relation("PermissionGrantee", fields: [userId], references: [id], onDelete: Restrict)
+  grantedBy        User           @relation("PermissionGrantor", fields: [grantedById], references: [id], onDelete: Restrict)
+  revokedBy        User?          @relation("PermissionRevoker", fields: [revokedById], references: [id], onDelete: SetNull)
+
+  @@index([documentId, userId, isRevoked])
+  @@index([userId, isRevoked])
+  @@index([documentId, isRevoked])
+  @@schema("trustvault")
+}
+
+model DownloadRecord {
+  id            String   @id @default(uuid()) @db.Uuid
+  documentId    String   @db.Uuid
+  versionNumber Int
+  userId        String   @db.Uuid
+  ipAddress     String?
+  userAgent     String?
+  downloadedAt  DateTime @default(now())
+
+  document      Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  user          User     @relation("UserDownloads", fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([documentId])
+  @@index([userId])
+  @@index([downloadedAt])
+  @@schema("trustvault")
+}
+
+model AuditLog {
+  id             String          @id @default(uuid()) @db.Uuid
+  action         AuditActionType
+  result         AuditResult     @default(SUCCESS)
+  actorId        String?         @db.Uuid
+  actorClerkId   String?
+  actorEmail     String?
+  actorRole      String?
+  targetUserId   String?         @db.Uuid
+  documentId     String?         @db.Uuid
+  ipAddress      String?
+  userAgent      String?
+  correlationId  String?
+  failureReason  String?
+  metadata       Json?
+  sequenceNumber BigInt          @default(autoincrement())
+  previousHash   String?
+  currentHash    String
+  createdAt      DateTime        @default(now())
+
+  actor          User?           @relation("AuditActor", fields: [actorId], references: [id], onDelete: SetNull)
+  targetUser     User?           @relation("AuditTargetUser", fields: [targetUserId], references: [id], onDelete: SetNull)
+  document       Document?       @relation(fields: [documentId], references: [id], onDelete: SetNull)
+
+  @@index([actorId])
+  @@index([documentId])
+  @@index([action])
+  @@index([result])
+  @@index([createdAt])
+  @@index([sequenceNumber])
+  @@schema("trustvault")
+}
+
+model AISuggestion {
+  id                  String             @id @default(uuid()) @db.Uuid
+  documentId          String             @db.Uuid
+  targetUserId        String             @db.Uuid
+  suggestedPermission PermissionType     @default(READ)
+  reason              String
+  confidenceScore     Float?
+  status              AISuggestionStatus @default(PENDING)
+  decidedById         String?            @db.Uuid
+  decidedAt           DateTime?
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+
+  document            Document           @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  targetUser          User               @relation("AISuggestionTargetUser", fields: [targetUserId], references: [id], onDelete: Restrict)
+  decidedBy           User?              @relation("AISuggestionDecider", fields: [decidedById], references: [id], onDelete: SetNull)
+
+  @@index([documentId, status])
+  @@index([targetUserId])
+  @@schema("trustvault")
+}
+
