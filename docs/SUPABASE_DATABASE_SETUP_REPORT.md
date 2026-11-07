@@ -97,3 +97,4 @@ In your Supabase web dashboard (**https://supabase.com/dashboard/project/vdjbuvy
 2. In the top-left corner, click the schema dropdown (currently showing **`public`**).
 3. Select **`trustvault`** from the list.
 4. You will immediately see all 8 tables.
+
