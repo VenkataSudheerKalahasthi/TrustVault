@@ -281,3 +281,4 @@ describe('TrustVault Admin Portal Comprehensive Security & Functional Verificati
     expect(cat).toBeDefined();
   });
 });
+

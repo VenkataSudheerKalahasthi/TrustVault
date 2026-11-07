@@ -11,6 +11,7 @@
     "build": "npm run build --workspaces --if-present",
     "dev:api": "npm run dev --workspace=@trustvault/api",
     "dev:web": "npm run dev --workspace=@trustvault/web",
+    "dev:admin": "npm run dev --workspace=@trustvault/admin",
     "test": "npm run test --workspaces --if-present",
     "prisma:generate": "npm run generate --workspace=@trustvault/database",
     "prisma:push": "npm run push --workspace=@trustvault/database",

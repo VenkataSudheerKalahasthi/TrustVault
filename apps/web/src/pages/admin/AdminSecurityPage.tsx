@@ -298,3 +298,4 @@ export const AdminSecurityPage: React.FC = () => {
     </div>
   );
 };
+
