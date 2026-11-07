@@ -22,10 +22,15 @@ export async function requireAuthentication(
     const testUserId = req.headers['x-test-user-id'] as string;
 
     // Test environment harness support for automated adversarial test scenarios
-    if (process.env.NODE_ENV === 'test' && testUserId) {
+    if ((process.env.NODE_ENV === 'test' || process.env.ENABLE_TEST_HARNESS === 'true') && testUserId) {
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(testUserId);
       const user = await prisma.user.findFirst({
         where: {
-          OR: [{ id: testUserId }, { clerkId: testUserId }, { email: testUserId }],
+          OR: [
+            ...(isUuid ? [{ id: testUserId }] : []),
+            { clerkId: testUserId },
+            { email: testUserId },
+          ],
         },
       });
 

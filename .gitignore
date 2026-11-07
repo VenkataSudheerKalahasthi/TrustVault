@@ -33,3 +33,7 @@ packages/**/.env
 !.env.example
 !apps/**/.env.example
 !packages/**/.env.example
+
+# Playwright Test Results
+test-results/
+playwright-report/

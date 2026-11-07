@@ -36,7 +36,7 @@ All intended features from the original project requirements are verified functi
   3. Supabase Studio defaults the Table Editor view to the `public` schema; custom schemas such as `trustvault` require selecting the schema from the dropdown.
   4. PostgREST required explicit exposure of the `trustvault` schema.
 - **Remediation Implemented:**
-  1. Configured verified connection string `postgresql://postgres:Sailaja8999!@db.vdjbuvyldtwyoaagqzun.supabase.co:5432/postgres?schema=trustvault` across all workspaces.
+  1. Configured verified connection string `postgresql://postgres:[REDACTED_PASSWORD]@db.vdjbuvyldtwyoaagqzun.supabase.co:5432/postgres?schema=trustvault` across all workspaces.
   2. Pushed the multi-schema Prisma definition (`npm run prisma:push`), creating all 8 tables in schema `trustvault`.
   3. Granted `USAGE` and `ALL PRIVILEGES` on schema `trustvault` to roles `postgres`, `anon`, `authenticated`, and `service_role`.
   4. Configured PostgREST schema exposure:
@@ -226,3 +226,4 @@ All requests from the frontends to `/api` are automatically proxied to `http://l
 ## 9. Conclusion
 
 TrustVault is fully functional, secure, and resilient against unauthorized access, privilege escalation, file tampering, and data leakage. All required features across the Admin, Owner, and Viewer portals are implemented and verified against the live Supabase project `vdjbuvyldtwyoaagqzun`.
+
