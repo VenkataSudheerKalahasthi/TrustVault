@@ -10,5 +10,8 @@ router.use(requireAuthentication, requireActiveUser, requireRole(UserRole.ADMIN)
 
 router.get('/dashboard', AdminController.getDashboardStats);
 router.get('/activity', AdminController.getActivityMonitoring);
+router.get('/documents', AdminController.getDocuments);
+router.get('/permissions', AdminController.getPermissions);
+router.get('/settings', AdminController.getSystemSettings);
 
 export default router;

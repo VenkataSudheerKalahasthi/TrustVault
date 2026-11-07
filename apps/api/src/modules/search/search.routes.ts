@@ -10,3 +10,4 @@ router.use(requireAuthentication, requireActiveUser);
 router.get('/', SearchController.search);
 
 export default router;
+

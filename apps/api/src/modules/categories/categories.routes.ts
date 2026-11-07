@@ -14,3 +14,4 @@ router.patch('/:id', requireRole(UserRole.ADMIN, UserRole.DOCUMENT_OWNER), Categ
 router.delete('/:id', requireRole(UserRole.ADMIN), CategoriesController.delete);
 
 export default router;
+

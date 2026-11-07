@@ -33,3 +33,4 @@ router.get('/health/database', async (_req: Request, res: Response) => {
 });
 
 export default router;
+

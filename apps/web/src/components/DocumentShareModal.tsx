@@ -246,3 +246,4 @@ export const DocumentShareModal: React.FC<DocumentShareModalProps> = ({ document
     </div>
   );
 };
+

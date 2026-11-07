@@ -23,3 +23,4 @@ router.get('/:id/content', requireDocumentPermission('READ'), DocumentsControlle
 router.get('/:id/download', requireDocumentPermission('DOWNLOAD'), DocumentsController.streamDownload);
 
 export default router;
+

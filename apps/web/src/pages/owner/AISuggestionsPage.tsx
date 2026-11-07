@@ -287,3 +287,4 @@ export const AISuggestionsPage: React.FC = () => {
     </div>
   );
 };
+

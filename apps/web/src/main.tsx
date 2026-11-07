@@ -56,3 +56,4 @@ if (!CLERK_PUBLISHABLE_KEY) {
     </React.StrictMode>
   );
 }
+

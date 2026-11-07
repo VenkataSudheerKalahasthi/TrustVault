@@ -223,3 +223,4 @@ export function requireDocumentPermission(operation: DocumentOperation) {
     }
   };
 }
+

@@ -23,3 +23,4 @@ export const HomePage: React.FC = () => {
 
   return <Navigate to="/viewer/documents" replace />;
 };
+

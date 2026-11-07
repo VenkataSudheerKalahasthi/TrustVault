@@ -20,3 +20,4 @@ router.delete('/:permissionId', requireDocumentPermission('OWNER'), PermissionsC
 router.patch('/:permissionId/revoke', requireDocumentPermission('OWNER'), PermissionsController.revoke);
 
 export default router;
+

@@ -8,3 +8,4 @@ const router = Router();
 router.get('/me', requireAuthentication, requireActiveUser, AuthController.getMe);
 
 export default router;
+

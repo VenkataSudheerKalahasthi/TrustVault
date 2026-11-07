@@ -148,3 +148,4 @@ export interface AISuggestionItem {
     lastName?: string | null;
   };
 }
+

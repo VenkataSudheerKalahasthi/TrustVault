@@ -19,3 +19,4 @@ router.patch('/:id/role', UsersController.updateRole);
 router.patch('/:id/status', requireRole(UserRole.ADMIN), UsersController.updateStatus);
 
 export default router;
+

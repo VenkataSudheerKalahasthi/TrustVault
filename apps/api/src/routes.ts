@@ -43,3 +43,4 @@ apiRouter.use('/search', searchRoutes);
 apiRouter.use('/', aiSuggestionsRoutes);
 
 export default apiRouter;
+

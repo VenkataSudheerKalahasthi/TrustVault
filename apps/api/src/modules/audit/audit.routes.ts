@@ -23,3 +23,4 @@ router.patch('/:id', AuditController.rejectTamperAttempt);
 router.delete('/:id', AuditController.rejectTamperAttempt);
 
 export default router;
+

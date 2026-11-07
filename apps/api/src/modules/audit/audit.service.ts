@@ -1,4 +1,4 @@
-import { prisma, AuditActionType, AuditResult, User, AuditLog } from '@trustvault/database';
+import { prisma, Prisma, AuditActionType, AuditResult, User, AuditLog } from '@trustvault/database';
 import { calculateAuditHash } from '../../utils/hash';
 
 export interface AuditLogParams {
@@ -17,50 +17,104 @@ export interface AuditLogParams {
 /**
  * Append-only verifiable audit event logging with SHA-256 hash chaining
  */
-export async function logAuditEvent(params: AuditLogParams): Promise<AuditLog> {
+export async function logAuditEvent(
+  params: AuditLogParams,
+  tx?: Prisma.TransactionClient
+): Promise<AuditLog> {
+  const client = tx || prisma;
   try {
-    return await prisma.$transaction(async (tx) => {
-      // Fetch latest audit record to establish cryptographic hash link
-      const lastAudit = await tx.auditLog.findFirst({
-        orderBy: { sequenceNumber: 'desc' },
-        select: { sequenceNumber: true, currentHash: true },
-      });
+    // 1. Verify foreign key constraints gracefully before inserting
+    let verifiedDocumentId: string | null = null;
+    if (params.documentId) {
+      try {
+        const docExists = await client.document.findUnique({
+          where: { id: params.documentId },
+          select: { id: true },
+        });
+        if (docExists) {
+          verifiedDocumentId = docExists.id;
+        }
+      } catch {
+        verifiedDocumentId = null;
+      }
+    }
 
-      const nextSequence = lastAudit ? Number(lastAudit.sequenceNumber) + 1 : 1;
-      const prevHash = lastAudit ? lastAudit.currentHash : null;
-      const timestamp = new Date();
+    let verifiedTargetUserId: string | null = null;
+    if (params.targetUserId) {
+      try {
+        const userExists = await client.user.findUnique({
+          where: { id: params.targetUserId },
+          select: { id: true },
+        });
+        if (userExists) {
+          verifiedTargetUserId = userExists.id;
+        }
+      } catch {
+        verifiedTargetUserId = null;
+      }
+    }
 
-      const currentHash = calculateAuditHash({
-        sequenceNumber: nextSequence,
-        previousHash: prevHash,
+    let verifiedActorId: string | null = null;
+    if (params.actor?.id) {
+      try {
+        const actorExists = await client.user.findUnique({
+          where: { id: params.actor.id },
+          select: { id: true },
+        });
+        if (actorExists) {
+          verifiedActorId = actorExists.id;
+        }
+      } catch {
+        verifiedActorId = null;
+      }
+    }
+
+    // Fetch latest audit record to establish cryptographic hash link
+    const lastAudit = await client.auditLog.findFirst({
+      orderBy: { sequenceNumber: 'desc' },
+      select: { sequenceNumber: true, currentHash: true },
+    });
+
+    const nextSequence = lastAudit ? Number(lastAudit.sequenceNumber) + 1 : 1;
+    const prevHash = lastAudit ? lastAudit.currentHash : null;
+    const timestamp = new Date();
+
+    const currentHash = calculateAuditHash({
+      sequenceNumber: nextSequence,
+      previousHash: prevHash,
+      action: params.action,
+      result: params.result || AuditResult.SUCCESS,
+      actorId: verifiedActorId,
+      documentId: verifiedDocumentId,
+      timestamp,
+    });
+
+    const metadata = {
+      ...(params.metadata || {}),
+      ...(params.documentId && !verifiedDocumentId ? { attemptedDocumentId: params.documentId } : {}),
+      ...(params.targetUserId && !verifiedTargetUserId ? { attemptedTargetUserId: params.targetUserId } : {}),
+    };
+
+    return await client.auditLog.create({
+      data: {
         action: params.action,
         result: params.result || AuditResult.SUCCESS,
-        actorId: params.actor?.id || null,
-        documentId: params.documentId || null,
-        timestamp,
-      });
-
-      return await tx.auditLog.create({
-        data: {
-          action: params.action,
-          result: params.result || AuditResult.SUCCESS,
-          actorId: params.actor?.id || null,
-          actorClerkId: params.actor?.clerkId || null,
-          actorEmail: params.actor?.email || null,
-          actorRole: params.actor?.role || null,
-          targetUserId: params.targetUserId || null,
-          documentId: params.documentId || null,
-          ipAddress: params.ipAddress || null,
-          userAgent: params.userAgent || null,
-          correlationId: params.correlationId || null,
-          failureReason: params.failureReason || null,
-          metadata: params.metadata || {},
-          sequenceNumber: BigInt(nextSequence),
-          previousHash: prevHash,
-          currentHash,
-          createdAt: timestamp,
-        },
-      });
+        actorId: verifiedActorId,
+        actorClerkId: params.actor?.clerkId || null,
+        actorEmail: params.actor?.email || null,
+        actorRole: params.actor?.role || null,
+        targetUserId: verifiedTargetUserId,
+        documentId: verifiedDocumentId,
+        ipAddress: params.ipAddress || null,
+        userAgent: params.userAgent || null,
+        correlationId: params.correlationId || null,
+        failureReason: params.failureReason || null,
+        metadata,
+        sequenceNumber: BigInt(nextSequence),
+        previousHash: prevHash,
+        currentHash,
+        createdAt: timestamp,
+      },
     });
   } catch (error) {
     console.error('CRITICAL: Failed to write audit event:', error);
@@ -137,3 +191,4 @@ export async function verifyAuditLogChain(): Promise<{
 
   return { isValid: true, totalVerified: logs.length };
 }
+

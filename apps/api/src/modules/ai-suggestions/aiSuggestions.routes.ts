@@ -19,3 +19,4 @@ router.get('/documents/:id/ai-suggestions', requireDocumentPermission('OWNER'), 
 router.post('/ai-suggestions/:id/decision', strictRateLimiter, AISuggestionsController.processDecision);
 
 export default router;
+

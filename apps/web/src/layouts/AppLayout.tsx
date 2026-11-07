@@ -18,6 +18,7 @@ import {
   X,
   CheckCircle2,
   Lock,
+  Settings,
 } from 'lucide-react';
 
 export const AppLayout: React.FC = () => {
@@ -140,9 +141,21 @@ export const AppLayout: React.FC = () => {
                   <Users className="w-4 h-4 text-slate-400" />
                   <span>User Management</span>
                 </Link>
+                <Link to="/admin/documents" className={navItemClass('/admin/documents')} onClick={() => setMobileMenuOpen(false)}>
+                  <FileText className="w-4 h-4 text-slate-400" />
+                  <span>Document Inventory</span>
+                </Link>
+                <Link to="/admin/permissions" className={navItemClass('/admin/permissions')} onClick={() => setMobileMenuOpen(false)}>
+                  <Share2 className="w-4 h-4 text-slate-400" />
+                  <span>Permissions Audit</span>
+                </Link>
                 <Link to="/admin/audit-logs" className={navItemClass('/admin/audit-logs')} onClick={() => setMobileMenuOpen(false)}>
                   <History className="w-4 h-4 text-slate-400" />
                   <span>Verifiable Audit Log</span>
+                </Link>
+                <Link to="/admin/settings" className={navItemClass('/admin/settings')} onClick={() => setMobileMenuOpen(false)}>
+                  <Settings className="w-4 h-4 text-slate-400" />
+                  <span>System Settings</span>
                 </Link>
               </nav>
             </div>
@@ -228,3 +241,4 @@ export const AppLayout: React.FC = () => {
     </div>
   );
 };
+

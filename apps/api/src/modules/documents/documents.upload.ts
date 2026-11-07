@@ -90,3 +90,4 @@ export function validateFileSignature(buffer: Buffer, originalName: string, mime
 
   return { isValid: true };
 }
+

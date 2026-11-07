@@ -235,3 +235,4 @@ export const SearchPage: React.FC = () => {
     </div>
   );
 };
+

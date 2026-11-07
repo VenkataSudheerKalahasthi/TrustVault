@@ -13,6 +13,9 @@ import { ViewerDashboardPage } from './pages/viewer/ViewerDashboardPage';
 import { AdminDashboardPage } from './pages/admin/AdminDashboardPage';
 import { UserManagementPage } from './pages/admin/UserManagementPage';
 import { AuditLogsPage } from './pages/admin/AuditLogsPage';
+import { AdminDocumentsPage } from './pages/admin/AdminDocumentsPage';
+import { AdminPermissionsPage } from './pages/admin/AdminPermissionsPage';
+import { AdminSettingsPage } from './pages/admin/AdminSettingsPage';
 import { SearchPage } from './pages/search/SearchPage';
 import { CategoriesPage } from './pages/categories/CategoriesPage';
 import { PrivacyPolicyPage } from './pages/legal/PrivacyPolicyPage';
@@ -131,10 +134,34 @@ export const App: React.FC = () => {
             }
           />
           <Route
+            path="admin/documents"
+            element={
+              <RoleGuard allowedRoles={['ADMIN']}>
+                <AdminDocumentsPage />
+              </RoleGuard>
+            }
+          />
+          <Route
+            path="admin/permissions"
+            element={
+              <RoleGuard allowedRoles={['ADMIN']}>
+                <AdminPermissionsPage />
+              </RoleGuard>
+            }
+          />
+          <Route
             path="admin/audit-logs"
             element={
               <RoleGuard allowedRoles={['ADMIN', 'DOCUMENT_OWNER']}>
                 <AuditLogsPage />
+              </RoleGuard>
+            }
+          />
+          <Route
+            path="admin/settings"
+            element={
+              <RoleGuard allowedRoles={['ADMIN']}>
+                <AdminSettingsPage />
               </RoleGuard>
             }
           />
@@ -146,3 +173,4 @@ export const App: React.FC = () => {
     </BrowserRouter>
   );
 };
+
