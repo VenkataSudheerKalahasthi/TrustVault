@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { prisma, User, UserRole } from '@trustvault/database';
+import { verifyToken } from '@clerk/backend';
 import { clerkClient, isClerkConfigured } from '../config/clerk';
 import { env } from '../config/env';
 
@@ -83,11 +84,44 @@ export async function requireAuthentication(
     }
 
     // Verify token with Clerk SDK
-    let clerkId: string;
+    let clerkId: string | null = null;
     try {
-      const verified = await clerkClient.authenticateRequest(req as any);
-      const auth = verified.toAuth();
-      if (!verified.isSignedIn || !auth?.userId) {
+      // Method A: Direct verifyToken on Bearer JWT token
+      try {
+        const payload = await verifyToken(token, {
+          secretKey: env.CLERK_SECRET_KEY,
+        });
+        if (payload && typeof payload.sub === 'string') {
+          clerkId = payload.sub;
+        }
+      } catch (jwtErr) {
+        // Fallback to authenticateRequest if verifyToken encounters format issue
+      }
+
+      // Method B: authenticateRequest with valid standard Request URL
+      if (!clerkId) {
+        const protocol = req.protocol || 'http';
+        const host = req.get('host') || 'localhost:5001';
+        const fullUrl = `${protocol}://${host}${req.originalUrl || req.url}`;
+        const standardHeaders = new globalThis.Headers();
+        for (const [k, v] of Object.entries(req.headers)) {
+          if (v) {
+            standardHeaders.set(k, Array.isArray(v) ? v.join(', ') : v);
+          }
+        }
+        const standardReq = new globalThis.Request(fullUrl, {
+          method: req.method,
+          headers: standardHeaders,
+        });
+
+        const verified = await clerkClient.authenticateRequest(standardReq);
+        const auth = verified.toAuth();
+        if (verified.isSignedIn && auth?.userId) {
+          clerkId = auth.userId;
+        }
+      }
+
+      if (!clerkId) {
         return res.status(401).json({
           success: false,
           error: {
@@ -96,8 +130,8 @@ export async function requireAuthentication(
           },
         });
       }
-      clerkId = auth.userId;
     } catch (e: any) {
+      console.error('[AUTH_VERIFICATION_ERROR]', e);
       return res.status(401).json({
         success: false,
         error: {
@@ -112,11 +146,16 @@ export async function requireAuthentication(
       where: { clerkId },
     });
 
+    const adminEmails = (env.BOOTSTRAP_ADMIN_EMAIL || '')
+      .split(',')
+      .map((e) => e.trim().toLowerCase())
+      .filter(Boolean);
+
     if (!user) {
       // Fetch details from Clerk and auto-provision in database
       const clerkUser = await clerkClient.users.getUser(clerkId);
       const email = clerkUser.emailAddresses[0]?.emailAddress || `${clerkId}@trustvault.user`;
-      const isBootstrapAdmin = env.BOOTSTRAP_ADMIN_EMAIL && email.toLowerCase() === env.BOOTSTRAP_ADMIN_EMAIL.toLowerCase();
+      const isBootstrapAdmin = adminEmails.includes(email.toLowerCase());
 
       user = await prisma.user.create({
         data: {
@@ -129,6 +168,14 @@ export async function requireAuthentication(
           isActive: true,
         },
       });
+    } else {
+      // If user is designated as bootstrap admin, ensure role is ADMIN
+      if (adminEmails.includes(user.email.toLowerCase()) && user.role !== UserRole.ADMIN) {
+        user = await prisma.user.update({
+          where: { id: user.id },
+          data: { role: UserRole.ADMIN },
+        });
+      }
     }
 
     req.user = user;

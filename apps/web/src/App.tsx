@@ -160,6 +160,27 @@ export const App: React.FC = () => {
             }
           />
 
+          {/* Admin link route */}
+          <Route
+            path="admin"
+            element={
+              <div className="py-16 text-center">
+                <h2 className="text-base font-semibold text-slate-800 mb-2">Admin Governance Console</h2>
+                <p className="text-xs text-slate-500 mb-4">
+                  The Admin Console runs on a dedicated governance port (5174).
+                </p>
+                <a
+                  href="http://localhost:5174"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-rose-600 text-white rounded text-xs font-semibold hover:bg-rose-700 shadow-sm transition-colors"
+                >
+                  Open Admin Portal &rarr;
+                </a>
+              </div>
+            }
+          />
+
           {/* Catch-all fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>

@@ -133,8 +133,10 @@ export const AppLayout: React.FC = () => {
                 Admin Governance
               </div>
               <nav className="space-y-1">
-                <Link
-                  to="/admin"
+                <a
+                  href={import.meta.env.VITE_ADMIN_PORTAL_URL || 'http://localhost:5174'}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="flex items-center justify-between px-3.5 py-2.5 rounded-md text-xs font-semibold bg-rose-950/40 text-rose-300 border border-rose-800/50 hover:bg-rose-950/70 transition-colors"
                   onClick={() => setMobileMenuOpen(false)}
                 >
@@ -142,7 +144,8 @@ export const AppLayout: React.FC = () => {
                     <Shield className="w-4 h-4 text-rose-400" />
                     <span>Launch Admin Portal</span>
                   </div>
-                </Link>
+                  <span className="text-[10px] text-rose-400 font-mono">:5174</span>
+                </a>
               </nav>
             </div>
           )}

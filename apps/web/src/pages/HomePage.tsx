@@ -13,11 +13,7 @@ export const HomePage: React.FC = () => {
     );
   }
 
-  if (role === 'ADMIN') {
-    return <Navigate to="/admin" replace />;
-  }
-
-  if (role === 'DOCUMENT_OWNER') {
+  if (role === 'ADMIN' || role === 'DOCUMENT_OWNER') {
     return <Navigate to="/owner/documents" replace />;
   }
 

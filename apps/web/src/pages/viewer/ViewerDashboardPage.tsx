@@ -21,7 +21,7 @@ export const ViewerDashboardPage: React.FC = () => {
   const [previewDoc, setPreviewDoc] = useState<DocumentItem | null>(null);
 
   // 1. Fetch Shared Documents
-  const { data: docResponse, isLoading, refetch } = useQuery({
+  const { data: docResponse, isLoading, isError, error, refetch } = useQuery({
     queryKey: ['sharedDocuments', page, search, selectedCategory],
     queryFn: () =>
       apiRequest<{ success: boolean; data: DocumentItem[]; pagination: any }>('/documents', {
@@ -109,8 +109,19 @@ export const ViewerDashboardPage: React.FC = () => {
       {/* Shared Documents Table */}
       <div className="bg-white rounded-lg border border-slate-200 shadow-subtle overflow-hidden">
         {isLoading ? (
-          <div className="py-16 text-center text-xs text-slate-500">
-            Checking real-time document permissions...
+          <div className="py-16 text-center text-xs text-slate-500 flex flex-col items-center justify-center gap-2">
+            <RefreshCw className="w-5 h-5 text-sky-600 animate-spin" />
+            <span>Checking real-time document permissions...</span>
+          </div>
+        ) : isError ? (
+          <div className="py-16 text-center">
+            <p className="text-xs text-rose-500 mb-2">{(error as any)?.message || 'Failed to check document permissions'}</p>
+            <button
+              onClick={() => refetch()}
+              className="text-xs text-sky-600 hover:text-sky-700 font-medium underline"
+            >
+              Retry
+            </button>
           </div>
         ) : documents.length === 0 ? (
           <div className="py-16 text-center">

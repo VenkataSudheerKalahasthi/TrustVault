@@ -33,7 +33,7 @@ const envSchema = z.object({
   SUPABASE_STORAGE_BUCKET: z.string().default('trustvault-documents'),
 
   AI_API_KEY: z.string().optional(),
-  BOOTSTRAP_ADMIN_EMAIL: z.string().email().optional(),
+  BOOTSTRAP_ADMIN_EMAIL: z.string().optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;
