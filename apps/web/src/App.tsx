@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { SignedIn, SignedOut, RedirectToSignIn } from '@clerk/clerk-react';
 import { AuthProvider, useAppAuth } from './context/AuthContext';
 import { AppLayout } from './layouts/AppLayout';
+import { AdminLayout } from './layouts/AdminLayout';
 import { HomePage } from './pages/HomePage';
 import { LoginPage } from './pages/auth/LoginPage';
 import { SignUpPage } from './pages/auth/SignUpPage';
@@ -15,7 +16,10 @@ import { UserManagementPage } from './pages/admin/UserManagementPage';
 import { AuditLogsPage } from './pages/admin/AuditLogsPage';
 import { AdminDocumentsPage } from './pages/admin/AdminDocumentsPage';
 import { AdminPermissionsPage } from './pages/admin/AdminPermissionsPage';
+import { AdminSecurityPage } from './pages/admin/AdminSecurityPage';
+import { AdminCategoriesPage } from './pages/admin/AdminCategoriesPage';
 import { AdminSettingsPage } from './pages/admin/AdminSettingsPage';
+import { AdminProfilePage } from './pages/admin/AdminProfilePage';
 import { SearchPage } from './pages/search/SearchPage';
 import { CategoriesPage } from './pages/categories/CategoriesPage';
 import { PrivacyPolicyPage } from './pages/legal/PrivacyPolicyPage';
@@ -65,7 +69,37 @@ export const App: React.FC = () => {
         <Route path="/login/*" element={<LoginPage />} />
         <Route path="/signup/*" element={<SignUpPage />} />
 
-        {/* Protected App Routes */}
+        {/* Dedicated Admin Portal Routes (Strictly ADMIN only with AdminLayout) */}
+        <Route
+          path="/admin/*"
+          element={
+            <>
+              <SignedIn>
+                <AuthProvider>
+                  <RoleGuard allowedRoles={['ADMIN']}>
+                    <AdminLayout />
+                  </RoleGuard>
+                </AuthProvider>
+              </SignedIn>
+              <SignedOut>
+                <RedirectToSignIn />
+              </SignedOut>
+            </>
+          }
+        >
+          <Route index element={<AdminDashboardPage />} />
+          <Route path="users" element={<UserManagementPage />} />
+          <Route path="documents" element={<AdminDocumentsPage />} />
+          <Route path="permissions" element={<AdminPermissionsPage />} />
+          <Route path="audit-logs" element={<AuditLogsPage />} />
+          <Route path="security" element={<AdminSecurityPage />} />
+          <Route path="categories" element={<AdminCategoriesPage />} />
+          <Route path="settings" element={<AdminSettingsPage />} />
+          <Route path="profile" element={<AdminProfilePage />} />
+          <Route path="*" element={<Navigate to="/admin" replace />} />
+        </Route>
+
+        {/* Protected App Routes (Standard Vault Layout) */}
         <Route
           path="/*"
           element={
@@ -116,52 +150,12 @@ export const App: React.FC = () => {
           <Route path="search" element={<SearchPage />} />
           <Route path="categories" element={<CategoriesPage />} />
 
-          {/* Admin Routes */}
+          {/* Audit Logs for Document Owners */}
           <Route
-            path="admin"
-            element={
-              <RoleGuard allowedRoles={['ADMIN']}>
-                <AdminDashboardPage />
-              </RoleGuard>
-            }
-          />
-          <Route
-            path="admin/users"
-            element={
-              <RoleGuard allowedRoles={['ADMIN']}>
-                <UserManagementPage />
-              </RoleGuard>
-            }
-          />
-          <Route
-            path="admin/documents"
-            element={
-              <RoleGuard allowedRoles={['ADMIN']}>
-                <AdminDocumentsPage />
-              </RoleGuard>
-            }
-          />
-          <Route
-            path="admin/permissions"
-            element={
-              <RoleGuard allowedRoles={['ADMIN']}>
-                <AdminPermissionsPage />
-              </RoleGuard>
-            }
-          />
-          <Route
-            path="admin/audit-logs"
+            path="audit-logs"
             element={
               <RoleGuard allowedRoles={['ADMIN', 'DOCUMENT_OWNER']}>
                 <AuditLogsPage />
-              </RoleGuard>
-            }
-          />
-          <Route
-            path="admin/settings"
-            element={
-              <RoleGuard allowedRoles={['ADMIN']}>
-                <AdminSettingsPage />
               </RoleGuard>
             }
           />
@@ -173,4 +167,3 @@ export const App: React.FC = () => {
     </BrowserRouter>
   );
 };
-

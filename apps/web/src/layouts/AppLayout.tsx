@@ -129,33 +129,19 @@ export const AppLayout: React.FC = () => {
           {/* Administrative Oversight Portal */}
           {isAdmin && (
             <div>
-              <div className="px-3 mb-2 text-[11px] font-semibold uppercase tracking-wider text-rose-400">
-                Administration & Audit
+              <div className="px-3 mb-2 text-[11px] font-semibold uppercase tracking-wider text-rose-400 font-mono">
+                Admin Governance
               </div>
               <nav className="space-y-1">
-                <Link to="/admin" className={navItemClass('/admin')} onClick={() => setMobileMenuOpen(false)}>
-                  <LayoutDashboard className="w-4 h-4 text-slate-400" />
-                  <span>Admin Dashboard</span>
-                </Link>
-                <Link to="/admin/users" className={navItemClass('/admin/users')} onClick={() => setMobileMenuOpen(false)}>
-                  <Users className="w-4 h-4 text-slate-400" />
-                  <span>User Management</span>
-                </Link>
-                <Link to="/admin/documents" className={navItemClass('/admin/documents')} onClick={() => setMobileMenuOpen(false)}>
-                  <FileText className="w-4 h-4 text-slate-400" />
-                  <span>Document Inventory</span>
-                </Link>
-                <Link to="/admin/permissions" className={navItemClass('/admin/permissions')} onClick={() => setMobileMenuOpen(false)}>
-                  <Share2 className="w-4 h-4 text-slate-400" />
-                  <span>Permissions Audit</span>
-                </Link>
-                <Link to="/admin/audit-logs" className={navItemClass('/admin/audit-logs')} onClick={() => setMobileMenuOpen(false)}>
-                  <History className="w-4 h-4 text-slate-400" />
-                  <span>Verifiable Audit Log</span>
-                </Link>
-                <Link to="/admin/settings" className={navItemClass('/admin/settings')} onClick={() => setMobileMenuOpen(false)}>
-                  <Settings className="w-4 h-4 text-slate-400" />
-                  <span>System Settings</span>
+                <Link
+                  to="/admin"
+                  className="flex items-center justify-between px-3.5 py-2.5 rounded-md text-xs font-semibold bg-rose-950/40 text-rose-300 border border-rose-800/50 hover:bg-rose-950/70 transition-colors"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <div className="flex items-center gap-3">
+                    <Shield className="w-4 h-4 text-rose-400" />
+                    <span>Launch Admin Portal</span>
+                  </div>
                 </Link>
               </nav>
             </div>

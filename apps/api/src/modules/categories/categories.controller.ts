@@ -68,6 +68,21 @@ export class CategoriesController {
         });
       }
 
+      // Enforce data integrity: prevent deletion of categories referenced by active documents
+      const activeDocCount = await prisma.document.count({
+        where: { categoryId: req.params.id, isDeleted: false },
+      });
+
+      if (activeDocCount > 0) {
+        return res.status(400).json({
+          success: false,
+          error: {
+            code: 'CATEGORY_IN_USE',
+            message: `Cannot delete category: it is referenced by ${activeDocCount} active document(s). Please reassign them first.`,
+          },
+        });
+      }
+
       await prisma.category.delete({
         where: { id: req.params.id },
       });
