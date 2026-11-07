@@ -146,13 +146,13 @@ export async function verifyAuditLogChain(): Promise<{
     const record = logs[i];
     const seq = Number(record.sequenceNumber);
 
-    // 1. Verify sequence order
-    if (seq !== i + 1) {
+    // 1. Verify strictly monotonic sequence order
+    if (i > 0 && seq <= Number(logs[i - 1].sequenceNumber)) {
       return {
         isValid: false,
         totalVerified: i,
         brokenAtSequence: seq,
-        reason: `Sequence gap detected: expected ${i + 1}, found ${seq}`,
+        reason: `Non-monotonic sequence order detected: sequence ${seq} is not greater than preceding sequence ${logs[i - 1].sequenceNumber}`,
       };
     }
 

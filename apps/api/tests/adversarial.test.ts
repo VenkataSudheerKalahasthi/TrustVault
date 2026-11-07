@@ -67,12 +67,13 @@ describe('TrustVault Mandatory 10 Adversarial Security Scenarios', () => {
   });
 
   afterAll(async () => {
-    // Cleanup test data
-    await prisma.aISuggestion.deleteMany({ where: { targetUserId: { in: [ownerA.id, viewerB.id, attackerC.id] } } });
-    await prisma.downloadRecord.deleteMany({ where: { userId: { in: [ownerA.id, viewerB.id, attackerC.id] } } });
-    await prisma.documentPermission.deleteMany({ where: { userId: { in: [ownerA.id, viewerB.id, attackerC.id] } } });
-    await prisma.documentVersion.deleteMany({ where: { uploadedById: { in: [ownerA.id, viewerB.id, attackerC.id] } } });
-    await prisma.document.deleteMany({ where: { ownerId: { in: [ownerA.id, viewerB.id, attackerC.id] } } });
+    // Soft-delete test documents so audit records preserve immutable referential integrity
+    if (ownerA?.id) {
+      await prisma.document.updateMany({
+        where: { ownerId: { in: [ownerA.id, viewerB.id, attackerC.id] } },
+        data: { isDeleted: true, deletedAt: new Date() },
+      });
+    }
   });
 
   // ---------------------------------------------------------------------------
