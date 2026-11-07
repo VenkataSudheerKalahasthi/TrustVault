@@ -154,8 +154,9 @@ export const DocumentShareModal: React.FC<DocumentShareModalProps> = ({ document
             {/* Permission Level & Download Policy */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">Access Level</label>
+                <label htmlFor="access-level-select" className="block text-xs font-medium text-slate-700 mb-1">Access Level</label>
                 <select
+                  id="access-level-select"
                   value={selectedPermission}
                   onChange={(e) => setSelectedPermission(e.target.value as any)}
                   className="w-full text-xs rounded-md border border-slate-300 py-2 px-3 focus:outline-none focus:ring-1 focus:ring-sky-500 bg-white"
