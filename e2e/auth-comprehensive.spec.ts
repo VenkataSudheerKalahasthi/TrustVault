@@ -150,3 +150,4 @@ test.describe('TrustVault Comprehensive Authentication UI & Workflow E2E Tests',
     await expect(page.locator('button:has-text("Send Recovery Code")')).toBeVisible();
   });
 });
+
