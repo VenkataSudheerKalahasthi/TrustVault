@@ -14,6 +14,8 @@ export interface AuditLogParams {
   metadata?: Record<string, any>;
 }
 
+let logMutex: Promise<any> = Promise.resolve();
+
 /**
  * Append-only verifiable audit event logging with SHA-256 hash chaining
  */
@@ -21,8 +23,22 @@ export async function logAuditEvent(
   params: AuditLogParams,
   tx?: Prisma.TransactionClient
 ): Promise<AuditLog> {
-  const client = tx || prisma;
+  // Chain through sequential Promise mutex to prevent concurrent sequence collisions
+  const previousOp = logMutex;
+  let release: () => void = () => {};
+  logMutex = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+
   try {
+    await previousOp;
+  } catch {
+    // Ignore error from previous operation to keep the queue moving
+  }
+
+  try {
+    const client = tx || prisma;
+
     // 1. Verify foreign key constraints gracefully before inserting
     let verifiedDocumentId: string | null = null;
     if (params.documentId) {
@@ -69,7 +85,7 @@ export async function logAuditEvent(
       }
     }
 
-    // Fetch latest audit record to establish cryptographic hash link
+    // Fetch latest audit record under exclusive sequential queue
     const lastAudit = await client.auditLog.findFirst({
       orderBy: { sequenceNumber: 'desc' },
       select: { sequenceNumber: true, currentHash: true },
@@ -109,7 +125,7 @@ export async function logAuditEvent(
         userAgent: params.userAgent || null,
         correlationId: params.correlationId || null,
         failureReason: params.failureReason || null,
-        metadata,
+        metadata: metadata ? (metadata as Prisma.InputJsonValue) : Prisma.JsonNull,
         sequenceNumber: BigInt(nextSequence),
         previousHash: prevHash,
         currentHash,
@@ -118,8 +134,9 @@ export async function logAuditEvent(
     });
   } catch (error) {
     console.error('CRITICAL: Failed to write audit event:', error);
-    // In strict enterprise mode, rethrow or return fallback to ensure audit non-repudiation
     throw error;
+  } finally {
+    release();
   }
 }
 
