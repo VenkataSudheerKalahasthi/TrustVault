@@ -1,6 +1,6 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { SignedIn, SignedOut, RedirectToSignIn } from '@clerk/clerk-react';
+import { SignedIn, SignedOut } from '@clerk/clerk-react';
 import { AuthProvider, useAppAuth } from './context/AuthContext';
 import { AppLayout } from './layouts/AppLayout';
 import { AdminLayout } from './layouts/AdminLayout';
@@ -86,7 +86,7 @@ export const App: React.FC = () => {
                 </AuthProvider>
               </SignedIn>
               <SignedOut>
-                <RedirectToSignIn />
+                <Navigate to="/login" replace />
               </SignedOut>
             </>
           }
@@ -114,7 +114,7 @@ export const App: React.FC = () => {
                 </AuthProvider>
               </SignedIn>
               <SignedOut>
-                <RedirectToSignIn />
+                <Navigate to="/login" replace />
               </SignedOut>
             </>
           }

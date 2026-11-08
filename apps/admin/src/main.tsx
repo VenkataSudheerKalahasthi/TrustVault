@@ -45,7 +45,11 @@ if (!CLERK_PUBLISHABLE_KEY || CLERK_PUBLISHABLE_KEY.includes('REPLACE_WITH_')) {
 } else {
   ReactDOM.createRoot(rootElement).render(
     <React.StrictMode>
-      <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY}>
+      <ClerkProvider
+        publishableKey={CLERK_PUBLISHABLE_KEY}
+        signInUrl="/login"
+        signInFallbackRedirectUrl="/"
+      >
         <QueryClientProvider client={queryClient}>
           <App />
         </QueryClientProvider>
