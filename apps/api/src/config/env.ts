@@ -34,6 +34,7 @@ const envSchema = z.object({
 
   AI_API_KEY: z.string().optional(),
   BOOTSTRAP_ADMIN_EMAIL: z.string().optional(),
+  ADMIN_EMAIL_ALLOWLIST: z.string().optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;
@@ -70,8 +71,28 @@ try {
     SUPABASE_STORAGE_BUCKET: process.env.SUPABASE_STORAGE_BUCKET || 'trustvault-documents',
     AI_API_KEY: process.env.AI_API_KEY,
     BOOTSTRAP_ADMIN_EMAIL: process.env.BOOTSTRAP_ADMIN_EMAIL,
+    ADMIN_EMAIL_ALLOWLIST: process.env.ADMIN_EMAIL_ALLOWLIST,
   };
 }
 
 export const env = parsedEnv;
+
+/**
+ * Returns a normalized, deduplicated list of lowercase email addresses
+ * authorized for administrative privileges.
+ */
+export function getAdminEmailAllowlist(): string[] {
+  const allowlist = [
+    ...(env.ADMIN_EMAIL_ALLOWLIST || '').split(','),
+    ...(env.BOOTSTRAP_ADMIN_EMAIL || '').split(','),
+  ];
+
+  return Array.from(
+    new Set(
+      allowlist
+        .map((email) => email.trim().toLowerCase())
+        .filter((email) => Boolean(email) && email.includes('@'))
+    )
+  );
+}
 

@@ -7,6 +7,8 @@ import { AdminLayout } from './layouts/AdminLayout';
 import { HomePage } from './pages/HomePage';
 import { LoginPage } from './pages/auth/LoginPage';
 import { SignUpPage } from './pages/auth/SignUpPage';
+import { ForgotPasswordPage } from './pages/auth/ForgotPasswordPage';
+import { ResetPasswordPage } from './pages/auth/ResetPasswordPage';
 import { MyDocumentsPage } from './pages/owner/MyDocumentsPage';
 import { UploadDocumentPage } from './pages/owner/UploadDocumentPage';
 import { AISuggestionsPage } from './pages/owner/AISuggestionsPage';
@@ -68,6 +70,8 @@ export const App: React.FC = () => {
         {/* Authentication Routes */}
         <Route path="/login/*" element={<LoginPage />} />
         <Route path="/signup/*" element={<SignUpPage />} />
+        <Route path="/forgot-password/*" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password/*" element={<ResetPasswordPage />} />
 
         {/* Dedicated Admin Portal Routes (Strictly ADMIN only with AdminLayout) */}
         <Route

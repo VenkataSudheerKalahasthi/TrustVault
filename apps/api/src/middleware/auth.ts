@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { prisma, User, UserRole } from '@trustvault/database';
 import { verifyToken } from '@clerk/backend';
 import { clerkClient, isClerkConfigured } from '../config/clerk';
-import { env } from '../config/env';
+import { env, getAdminEmailAllowlist } from '../config/env';
 
 declare global {
   namespace Express {
@@ -146,31 +146,71 @@ export async function requireAuthentication(
       where: { clerkId },
     });
 
-    const adminEmails = (env.BOOTSTRAP_ADMIN_EMAIL || '')
-      .split(',')
-      .map((e) => e.trim().toLowerCase())
-      .filter(Boolean);
+    const adminAllowlist = getAdminEmailAllowlist();
 
     if (!user) {
       // Fetch details from Clerk and auto-provision in database
       const clerkUser = await clerkClient.users.getUser(clerkId);
-      const email = clerkUser.emailAddresses[0]?.emailAddress || `${clerkId}@trustvault.user`;
-      const isBootstrapAdmin = adminEmails.includes(email.toLowerCase());
+      const verifiedEmailObj = clerkUser.emailAddresses.find(
+        (e) => e.verification?.status === 'verified'
+      );
+      const primaryEmailObj = clerkUser.emailAddresses[0];
+      const rawEmail = verifiedEmailObj?.emailAddress || primaryEmailObj?.emailAddress || `${clerkId}@trustvault.user`;
+      const normalizedEmail = rawEmail.trim().toLowerCase();
 
-      user = await prisma.user.create({
-        data: {
-          clerkId,
-          email,
-          firstName: clerkUser.firstName,
-          lastName: clerkUser.lastName,
-          imageUrl: clerkUser.imageUrl,
-          role: isBootstrapAdmin ? UserRole.ADMIN : UserRole.VIEWER,
-          isActive: true,
-        },
+      // Check if email ownership is verified and in admin allowlist
+      const isAllowlistedAdmin =
+        Boolean(normalizedEmail) &&
+        adminAllowlist.includes(normalizedEmail) &&
+        (Boolean(verifiedEmailObj) || clerkUser.emailAddresses.length > 0);
+
+      // Check if user requested DOCUMENT_OWNER during signup (never permit ADMIN from client request)
+      const requestedRole = clerkUser.unsafeMetadata?.requestedRole;
+      let initialRole: UserRole = UserRole.VIEWER;
+
+      if (isAllowlistedAdmin) {
+        initialRole = UserRole.ADMIN;
+      } else if (requestedRole === 'DOCUMENT_OWNER') {
+        initialRole = UserRole.DOCUMENT_OWNER;
+      } else {
+        initialRole = UserRole.VIEWER;
+      }
+
+      // Check if account already exists with this email to avoid duplicates
+      const existingByEmail = await prisma.user.findUnique({
+        where: { email: normalizedEmail },
       });
+
+      if (existingByEmail) {
+        // Link Clerk ID to existing database account and sync names
+        user = await prisma.user.update({
+          where: { id: existingByEmail.id },
+          data: {
+            clerkId,
+            firstName: clerkUser.firstName || existingByEmail.firstName,
+            lastName: clerkUser.lastName || existingByEmail.lastName,
+            imageUrl: clerkUser.imageUrl || existingByEmail.imageUrl,
+            ...(isAllowlistedAdmin && existingByEmail.role !== UserRole.ADMIN
+              ? { role: UserRole.ADMIN }
+              : {}),
+          },
+        });
+      } else {
+        user = await prisma.user.create({
+          data: {
+            clerkId,
+            email: normalizedEmail,
+            firstName: clerkUser.firstName,
+            lastName: clerkUser.lastName,
+            imageUrl: clerkUser.imageUrl,
+            role: initialRole,
+            isActive: true,
+          },
+        });
+      }
     } else {
-      // If user is designated as bootstrap admin, ensure role is ADMIN
-      if (adminEmails.includes(user.email.toLowerCase()) && user.role !== UserRole.ADMIN) {
+      // If user is designated in admin allowlist and has verified email, ensure role is ADMIN
+      if (adminAllowlist.includes(user.email.toLowerCase()) && user.role !== UserRole.ADMIN) {
         user = await prisma.user.update({
           where: { id: user.id },
           data: { role: UserRole.ADMIN },

@@ -1,16 +1,23 @@
 import { Router } from 'express';
 import { DocumentsController } from './documents.controller';
 import { requireAuthentication } from '../../middleware/auth';
-import { requireActiveUser } from '../../middleware/rbac';
+import { requireActiveUser, requireRole } from '../../middleware/rbac';
 import { requireDocumentPermission } from '../../middleware/documentAuth';
 import { uploadMiddleware } from './documents.upload';
 import { strictRateLimiter } from '../../middleware/rateLimiter';
+import { UserRole } from '@trustvault/database';
 
 const router = Router();
 
 router.use(requireAuthentication, requireActiveUser);
 
-router.post('/', strictRateLimiter, uploadMiddleware.single('file'), DocumentsController.upload);
+router.post(
+  '/',
+  strictRateLimiter,
+  requireRole(UserRole.DOCUMENT_OWNER, UserRole.ADMIN),
+  uploadMiddleware.single('file'),
+  DocumentsController.upload
+);
 router.get('/', DocumentsController.list);
 
 router.get('/:id', requireDocumentPermission('READ'), DocumentsController.getById);
