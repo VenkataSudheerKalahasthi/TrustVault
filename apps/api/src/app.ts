@@ -70,6 +70,16 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // Global Rate Limiting
 app.use(standardRateLimiter);
 
+// Direct Health Check endpoints
+app.get(['/health', '/api/health'], (_req, res) => {
+  res.json({
+    status: 'healthy',
+    service: 'TrustVault Serverless API',
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'production',
+  });
+});
+
 // Mount API version 1
 app.use('/api/v1', apiRouter);
 
