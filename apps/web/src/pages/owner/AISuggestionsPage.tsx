@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '../../services/api';
+import { useAppAuth } from '../../context/AuthContext';
 import { DocumentItem, AISuggestionItem } from '../../types';
 import {
   Sparkles,
@@ -14,6 +15,7 @@ import {
 
 export const AISuggestionsPage: React.FC = () => {
   const queryClient = useQueryClient();
+  const { user, isLoading: isAuthLoading } = useAppAuth();
   const [selectedDocId, setSelectedDocId] = useState<string>('');
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
@@ -25,6 +27,7 @@ export const AISuggestionsPage: React.FC = () => {
   const { data: docsResponse } = useQuery({
     queryKey: ['myDocumentsForAI'],
     queryFn: () => apiRequest<{ success: boolean; data: DocumentItem[] }>('/documents', { params: { limit: 50 } }),
+    enabled: !isAuthLoading && !!user,
   });
 
   const documents = docsResponse?.data?.filter((d) => d.isOwner) || [];

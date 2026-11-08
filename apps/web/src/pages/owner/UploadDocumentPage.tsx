@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { apiRequest } from '../../services/api';
+import { useAppAuth } from '../../context/AuthContext';
 import { DocumentCategory } from '../../types';
 import {
   UploadCloud,
@@ -15,6 +16,7 @@ import {
 } from 'lucide-react';
 
 export const UploadDocumentPage: React.FC = () => {
+  const { user, isLoading: isAuthLoading } = useAppAuth();
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -30,6 +32,7 @@ export const UploadDocumentPage: React.FC = () => {
   const { data: categoriesResponse } = useQuery({
     queryKey: ['categories'],
     queryFn: () => apiRequest<{ success: boolean; data: DocumentCategory[] }>('/categories'),
+    enabled: !isAuthLoading && !!user,
   });
 
   const categories = categoriesResponse?.data || [];

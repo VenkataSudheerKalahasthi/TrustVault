@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '../../services/api';
+import { useAppAuth } from '../../context/AuthContext';
 import { DocumentPreviewModal } from '../../components/DocumentPreviewModal';
 import { DocumentShareModal } from '../../components/DocumentShareModal';
 import { DocumentItem, DocumentCategory } from '../../types';
@@ -22,6 +23,7 @@ import { Link } from 'react-router-dom';
 
 export const MyDocumentsPage: React.FC = () => {
   const queryClient = useQueryClient();
+  const { user, isLoading: isAuthLoading } = useAppAuth();
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [page, setPage] = useState(1);
@@ -49,12 +51,14 @@ export const MyDocumentsPage: React.FC = () => {
       apiRequest<{ success: boolean; data: DocumentItem[]; pagination: any }>('/documents', {
         params: { page, limit: 15, search: search || undefined, categoryId: selectedCategory || undefined },
       }),
+    enabled: !isAuthLoading && !!user,
   });
 
   // 2. Fetch Categories
   const { data: categoriesResponse } = useQuery({
     queryKey: ['categories'],
     queryFn: () => apiRequest<{ success: boolean; data: DocumentCategory[] }>('/categories'),
+    enabled: !isAuthLoading && !!user,
   });
 
   // 3. Download handler (authenticated backend stream)

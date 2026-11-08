@@ -13,7 +13,7 @@ import {
 
 export const CategoriesPage: React.FC = () => {
   const queryClient = useQueryClient();
-  const { isAdmin, isOwner } = useAppAuth();
+  const { isAdmin, isOwner, user, isLoading: isAuthLoading } = useAppAuth();
 
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [editCategory, setEditCategory] = useState<DocumentCategory | null>(null);
@@ -24,6 +24,7 @@ export const CategoriesPage: React.FC = () => {
   const { data: categoriesResponse, isLoading } = useQuery({
     queryKey: ['categories'],
     queryFn: () => apiRequest<{ success: boolean; data: DocumentCategory[] }>('/categories'),
+    enabled: !isAuthLoading && !!user,
   });
 
   const createMutation = useMutation({

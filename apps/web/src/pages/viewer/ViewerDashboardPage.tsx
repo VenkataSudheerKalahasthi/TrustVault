@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { apiRequest } from '../../services/api';
+import { useAppAuth } from '../../context/AuthContext';
 import { DocumentPreviewModal } from '../../components/DocumentPreviewModal';
 import { DocumentItem, DocumentCategory } from '../../types';
 import {
@@ -15,6 +16,7 @@ import {
 } from 'lucide-react';
 
 export const ViewerDashboardPage: React.FC = () => {
+  const { user, isLoading: isAuthLoading } = useAppAuth();
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [page, setPage] = useState(1);
@@ -27,12 +29,14 @@ export const ViewerDashboardPage: React.FC = () => {
       apiRequest<{ success: boolean; data: DocumentItem[]; pagination: any }>('/documents', {
         params: { page, limit: 15, search: search || undefined, categoryId: selectedCategory || undefined },
       }),
+    enabled: !isAuthLoading && !!user,
   });
 
   // 2. Fetch Categories
   const { data: categoriesResponse } = useQuery({
     queryKey: ['categories'],
     queryFn: () => apiRequest<{ success: boolean; data: DocumentCategory[] }>('/categories'),
+    enabled: !isAuthLoading && !!user,
   });
 
   const handleDownload = async (doc: DocumentItem) => {
@@ -108,7 +112,7 @@ export const ViewerDashboardPage: React.FC = () => {
 
       {/* Shared Documents Table */}
       <div className="bg-white rounded-lg border border-slate-200 shadow-subtle overflow-hidden">
-        {isLoading ? (
+        {isLoading || isAuthLoading ? (
           <div className="py-16 text-center text-xs text-slate-500 flex flex-col items-center justify-center gap-2">
             <RefreshCw className="w-5 h-5 text-sky-600 animate-spin" />
             <span>Checking real-time document permissions...</span>

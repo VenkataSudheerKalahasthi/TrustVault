@@ -24,8 +24,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const { getToken, isSignedIn, isLoaded: isClerkLoaded } = useAuth();
   const { user: clerkUser } = useClerkUser();
 
-  useEffect(() => {
+  if (getToken) {
     setTokenGetter(() => getToken());
+  }
+
+  useEffect(() => {
+    if (getToken) {
+      setTokenGetter(() => getToken());
+    }
   }, [getToken]);
 
   const {
@@ -34,10 +40,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     refetch,
   } = useQuery({
     queryKey: ['authMe', clerkUser?.id],
-    queryFn: () => apiRequest<{ success: boolean; data: ApplicationUser }>('/auth/me'),
-    enabled: Boolean(isClerkLoaded && isSignedIn),
+    queryFn: async () => {
+      const token = await getToken();
+      if (!token) {
+        throw new Error('Authentication session token is still initializing');
+      }
+      return apiRequest<{ success: boolean; data: ApplicationUser }>('/auth/me');
+    },
+    enabled: Boolean(isClerkLoaded && isSignedIn && clerkUser?.id),
     staleTime: 60 * 1000,
-    retry: 1,
+    retry: 3,
+    retryDelay: (attempt) => Math.min(attempt * 1000, 3000),
   });
 
   const user = profileResponse?.data || null;

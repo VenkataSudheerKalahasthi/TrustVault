@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { apiRequest } from '../../services/api';
+import { useAppAuth } from '../../context/AuthContext';
 import { DocumentPreviewModal } from '../../components/DocumentPreviewModal';
 import { DocumentItem, DocumentCategory } from '../../types';
 import {
@@ -14,6 +15,7 @@ import {
 } from 'lucide-react';
 
 export const SearchPage: React.FC = () => {
+  const { user, isLoading: isAuthLoading } = useAppAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryId, setCategoryId] = useState('');
   const [dateFrom, setDateFrom] = useState('');
@@ -25,6 +27,7 @@ export const SearchPage: React.FC = () => {
   const { data: categoriesResponse } = useQuery({
     queryKey: ['categories'],
     queryFn: () => apiRequest<{ success: boolean; data: DocumentCategory[] }>('/categories'),
+    enabled: !isAuthLoading && !!user,
   });
 
   // 2. Search Query (debounced or triggered on state)

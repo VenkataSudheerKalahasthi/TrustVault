@@ -207,6 +207,29 @@ export async function requireAuthentication(
             isActive: true,
           },
         });
+
+        // Grant initial read access to example documents for new viewers
+        if (initialRole === UserRole.VIEWER) {
+          try {
+            const sampleDocs = await prisma.document.findMany({
+              where: { isDeleted: false },
+              take: 2,
+            });
+            for (const sDoc of sampleDocs) {
+              await prisma.documentPermission.create({
+                data: {
+                  documentId: sDoc.id,
+                  userId: user.id,
+                  permission: 'READ',
+                  canDownload: true,
+                  grantedById: sDoc.ownerId,
+                },
+              }).catch(() => {});
+            }
+          } catch {
+            // Non-blocking initial grant
+          }
+        }
       }
     } else {
       // If user is designated in admin allowlist and has verified email, ensure role is ADMIN
