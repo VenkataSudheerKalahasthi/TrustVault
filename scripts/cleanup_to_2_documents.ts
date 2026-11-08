@@ -269,7 +269,7 @@ async function main() {
         canDownload: true,
         grantedById: admin.id,
       },
-    });
+    }).catch(() => {});
 
     await prisma.documentPermission.create({
       data: {
@@ -279,30 +279,33 @@ async function main() {
         canDownload: true,
         grantedById: admin.id,
       },
-    });
+    }).catch(() => {});
   }
 
-  // Owner gets EDIT permission on Doc 2 and READ on Doc 1
-  if (owner) {
+  // All owners get access to collaborate (READ on Doc 1, EDIT on Doc 2)
+  const allOwners = await prisma.user.findMany({
+    where: { role: UserRole.DOCUMENT_OWNER },
+  });
+  for (const o of allOwners) {
     await prisma.documentPermission.create({
       data: {
         documentId: doc1.id,
-        userId: owner.id,
+        userId: o.id,
         permission: PermissionType.READ,
         canDownload: true,
         grantedById: admin.id,
       },
-    });
+    }).catch(() => {});
 
     await prisma.documentPermission.create({
       data: {
         documentId: doc2.id,
-        userId: owner.id,
+        userId: o.id,
         permission: PermissionType.EDIT,
         canDownload: true,
         grantedById: admin.id,
       },
-    });
+    }).catch(() => {});
   }
 
   // 8. Re-chain the cryptographic AuditLog table
