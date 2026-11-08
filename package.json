@@ -9,8 +9,9 @@
   ],
   "scripts": {
     "build": "npm run build --workspaces --if-present",
-    "build:web": "npm run prisma:generate && npm run build --workspace=@trustvault/web",
-    "build:admin": "npm run prisma:generate && npm run build --workspace=@trustvault/admin",
+    "build:packages": "npm run build --workspace=@trustvault/shared && npm run prisma:generate",
+    "build:web": "npm run build:packages && npm run build --workspace=@trustvault/web",
+    "build:admin": "npm run build:packages && npm run build --workspace=@trustvault/admin",
     "dev:api": "npm run dev --workspace=@trustvault/api",
     "dev:web": "npm run dev --workspace=@trustvault/web",
     "dev:admin": "npm run dev --workspace=@trustvault/admin",
