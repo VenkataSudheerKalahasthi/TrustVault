@@ -1,0 +1,15 @@
+{
+  "version": 2,
+  "buildCommand": "npm run prisma:generate && npm run build --workspace=@trustvault/web",
+  "outputDirectory": "apps/web/dist",
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/index"
+    },
+    {
+      "source": "/((?!api/).*)",
+      "destination": "/index.html"
+    }
+  ]
+}
