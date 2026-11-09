@@ -7,7 +7,8 @@ import { ApplicationUser } from '../types';
 
 export const LoginPage: React.FC = () => {
   const { isLoaded, signIn, setActive } = useSignIn();
-  const { signOut } = useClerk();
+  const clerk = useClerk();
+  const { signOut } = clerk;
   const { isSignedIn } = useAuth();
   const navigate = useNavigate();
 
@@ -16,6 +17,19 @@ export const LoginPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const checkAdminRoleAndNavigate = async () => {
+    try {
+      const profile = await apiRequest<{ success: boolean; data: ApplicationUser }>('/auth/me');
+      if (profile?.data?.role === 'ADMIN') {
+        navigate('/', { replace: true });
+      } else {
+        navigate('/unauthorized', { replace: true });
+      }
+    } catch {
+      navigate('/', { replace: true });
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,8 +47,11 @@ export const LoginPage: React.FC = () => {
     try {
       setIsLoading(true);
 
-      if (isSignedIn) {
-        await signOut();
+      if (isSignedIn || clerk.session) {
+        try {
+          await signOut();
+          await new Promise((r) => setTimeout(r, 150));
+        } catch {}
       }
 
       const result = await signIn.create({
@@ -44,25 +61,46 @@ export const LoginPage: React.FC = () => {
 
       if (result.status === 'complete') {
         await setActive({ session: result.createdSessionId });
-
-        // Verify if user is an ADMIN
-        try {
-          const profile = await apiRequest<{ success: boolean; data: ApplicationUser }>('/auth/me');
-          if (profile?.data?.role === 'ADMIN') {
-            navigate('/', { replace: true });
-          } else {
-            navigate('/unauthorized', { replace: true });
-          }
-        } catch {
-          navigate('/', { replace: true });
-        }
+        await checkAdminRoleAndNavigate();
       } else {
         setError(`Additional authentication step required: ${result.status}`);
       }
     } catch (err: any) {
       console.error('[ADMIN_LOGIN_ERROR]', err);
       const clerkError = err?.errors?.[0];
-      setError(clerkError?.longMessage || clerkError?.message || err.message || 'Administrative authentication failed.');
+      const isSessionConflict =
+        clerkError?.code === 'session_exists' ||
+        clerkError?.message?.toLowerCase().includes('already signed in') ||
+        err?.message?.toLowerCase().includes('already signed in');
+
+      if (isSessionConflict) {
+        try {
+          await signOut();
+          await new Promise((r) => setTimeout(r, 200));
+
+          const retryResult = await signIn.create({
+            identifier: email.trim(),
+            password,
+          });
+
+          if (retryResult.status === 'complete') {
+            await setActive({ session: retryResult.createdSessionId });
+            await checkAdminRoleAndNavigate();
+            return;
+          }
+        } catch (retryErr: any) {
+          console.error('[ADMIN_LOGIN_RETRY_ERROR]', retryErr);
+          await signOut();
+          window.location.reload();
+          return;
+        }
+      } else if (clerkError?.code === 'form_identifier_not_found') {
+        setError('No TrustVault administrative account found with this email.');
+      } else if (clerkError?.code === 'form_password_incorrect') {
+        setError('Incorrect password provided.');
+      } else {
+        setError(clerkError?.longMessage || clerkError?.message || err.message || 'Administrative authentication failed.');
+      }
     } finally {
       setIsLoading(false);
     }

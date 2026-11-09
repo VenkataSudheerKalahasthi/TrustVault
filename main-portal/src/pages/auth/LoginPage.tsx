@@ -7,7 +7,8 @@ import { ApplicationUser } from '../../types';
 
 export const LoginPage: React.FC = () => {
   const { isLoaded, signIn, setActive } = useSignIn();
-  const { signOut } = useClerk();
+  const clerk = useClerk();
+  const { signOut } = clerk;
   const { isSignedIn } = useAuth();
   const { user } = useUser();
   const navigate = useNavigate();
@@ -21,6 +22,21 @@ export const LoginPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   const resetSuccess = searchParams.get('reset') === 'success';
+
+  const navigateByRole = async () => {
+    try {
+      const profileRes = await apiRequest<{ success: boolean; data: ApplicationUser }>('/auth/me');
+      const userRole = profileRes?.data?.role;
+
+      if (userRole === 'ADMIN' || userRole === 'DOCUMENT_OWNER') {
+        navigate('/owner/documents', { replace: true });
+      } else {
+        navigate('/viewer/documents', { replace: true });
+      }
+    } catch {
+      navigate('/', { replace: true });
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,9 +54,14 @@ export const LoginPage: React.FC = () => {
     try {
       setIsLoading(true);
 
-      // If already signed in, sign out first to prevent session collision
-      if (isSignedIn) {
-        await signOut();
+      // If user is currently signed in under ANY session in the client, cleanly sign out first
+      if (isSignedIn || clerk.session) {
+        try {
+          await signOut();
+          await new Promise((r) => setTimeout(r, 150));
+        } catch {
+          // ignore signout errors
+        }
       }
 
       const result = await signIn.create({
@@ -50,46 +71,39 @@ export const LoginPage: React.FC = () => {
 
       if (result.status === 'complete') {
         await setActive({ session: result.createdSessionId });
-
-        // Retrieve verified database role for zero-trust redirection
-        try {
-          const profileRes = await apiRequest<{ success: boolean; data: ApplicationUser }>('/auth/me');
-          const userRole = profileRes?.data?.role;
-
-          if (userRole === 'ADMIN') {
-            window.location.href = import.meta.env.VITE_ADMIN_PORTAL_URL || 'http://localhost:5174';
-            return;
-          } else if (userRole === 'DOCUMENT_OWNER') {
-            navigate('/owner/documents', { replace: true });
-            return;
-          } else {
-            navigate('/viewer/documents', { replace: true });
-            return;
-          }
-        } catch {
-          // Fallback to home route if profile fetch encounters temporary delay
-          navigate('/', { replace: true });
-        }
+        await navigateByRole();
       } else {
         setError(`Additional authentication verification required: ${result.status}`);
       }
     } catch (err: any) {
       console.error('[SIGN_IN_ERROR]', err);
       const clerkError = err?.errors?.[0];
-      if (clerkError?.code === 'session_exists' || clerkError?.message?.includes('already signed in')) {
+      const isSessionConflict =
+        clerkError?.code === 'session_exists' ||
+        clerkError?.message?.toLowerCase().includes('already signed in') ||
+        err?.message?.toLowerCase().includes('already signed in');
+
+      if (isSessionConflict) {
         try {
+          // Force sign out existing session and retry transparently
           await signOut();
+          await new Promise((r) => setTimeout(r, 200));
+
           const retryResult = await signIn.create({
             identifier: email.trim(),
             password,
           });
+
           if (retryResult.status === 'complete') {
             await setActive({ session: retryResult.createdSessionId });
-            navigate('/', { replace: true });
+            await navigateByRole();
             return;
           }
-        } catch {
-          setError('Existing session detected and cleared. Please click Sign In again.');
+        } catch (retryErr: any) {
+          console.error('[SIGN_IN_RETRY_ERROR]', retryErr);
+          await signOut();
+          window.location.reload();
+          return;
         }
       } else if (clerkError?.code === 'form_identifier_not_found') {
         setError('No TrustVault account found with this email. Please check your credentials or register.');
