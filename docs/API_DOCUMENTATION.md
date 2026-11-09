@@ -304,3 +304,4 @@ All endpoints prefixed with `/api/v1/admin/*` require the caller to possess the 
 * **Allowed Callers**: `ADMIN` ONLY
 * **Request Body**: `{ "isActive": false }`
 * **Enforcement**: Deactivated accounts are blocked at the middleware layer on their next HTTP request, even if their Clerk session JWT is still valid.
+

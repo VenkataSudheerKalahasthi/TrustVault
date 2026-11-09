@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { useSignIn, useClerk } from '@clerk/clerk-react';
-import { Shield, Eye, EyeOff, Lock, Mail, CheckCircle2, AlertCircle, ArrowRight } from 'lucide-react';
+import { useSignIn, useClerk, useAuth, useUser } from '@clerk/clerk-react';
+import { Shield, Eye, EyeOff, Lock, Mail, CheckCircle2, AlertCircle, ArrowRight, UserCheck } from 'lucide-react';
 import { apiRequest } from '../../services/api';
 import { ApplicationUser } from '../../types';
 
 export const LoginPage: React.FC = () => {
   const { isLoaded, signIn, setActive } = useSignIn();
   const { signOut } = useClerk();
+  const { isSignedIn } = useAuth();
+  const { user } = useUser();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
@@ -36,6 +38,11 @@ export const LoginPage: React.FC = () => {
     try {
       setIsLoading(true);
 
+      // If already signed in, sign out first to prevent session collision
+      if (isSignedIn) {
+        await signOut();
+      }
+
       const result = await signIn.create({
         identifier: email.trim(),
         password,
@@ -50,7 +57,7 @@ export const LoginPage: React.FC = () => {
           const userRole = profileRes?.data?.role;
 
           if (userRole === 'ADMIN') {
-            window.location.href = 'http://localhost:5174';
+            window.location.href = import.meta.env.VITE_ADMIN_PORTAL_URL || 'http://localhost:5174';
             return;
           } else if (userRole === 'DOCUMENT_OWNER') {
             navigate('/owner/documents', { replace: true });
@@ -69,7 +76,22 @@ export const LoginPage: React.FC = () => {
     } catch (err: any) {
       console.error('[SIGN_IN_ERROR]', err);
       const clerkError = err?.errors?.[0];
-      if (clerkError?.code === 'form_identifier_not_found') {
+      if (clerkError?.code === 'session_exists' || clerkError?.message?.includes('already signed in')) {
+        try {
+          await signOut();
+          const retryResult = await signIn.create({
+            identifier: email.trim(),
+            password,
+          });
+          if (retryResult.status === 'complete') {
+            await setActive({ session: retryResult.createdSessionId });
+            navigate('/', { replace: true });
+            return;
+          }
+        } catch {
+          setError('Existing session detected and cleared. Please click Sign In again.');
+        }
+      } else if (clerkError?.code === 'form_identifier_not_found') {
         setError('No TrustVault account found with this email. Please check your credentials or register.');
       } else if (clerkError?.code === 'form_password_incorrect') {
         setError('Incorrect password provided. Please verify your credentials or use password recovery.');
@@ -103,6 +125,41 @@ export const LoginPage: React.FC = () => {
               Enter your credentials to access encrypted document storage.
             </p>
           </div>
+
+          {/* Already Signed In Banner */}
+          {isSignedIn && (
+            <div className="mb-5 bg-sky-50 border border-sky-200 rounded-md p-3.5 text-xs text-sky-950">
+              <div className="flex items-start gap-2.5">
+                <UserCheck className="w-4 h-4 text-sky-600 shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <p className="font-semibold text-sky-900">Active session detected</p>
+                  <p className="text-sky-700 mt-0.5 text-[11px]">
+                    You are already authenticated{user?.primaryEmailAddress?.emailAddress ? ` as ${user.primaryEmailAddress.emailAddress}` : ''}.
+                  </p>
+                  <div className="mt-2.5 flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => navigate('/', { replace: true })}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-sky-600 text-white rounded text-xs font-semibold hover:bg-sky-500 transition-colors shadow-sm"
+                    >
+                      <span>Open Vault</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        await signOut();
+                        setError(null);
+                      }}
+                      className="px-2.5 py-1.5 bg-white text-slate-700 border border-slate-300 rounded text-xs font-medium hover:bg-slate-50 transition-colors"
+                    >
+                      Sign Out
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Password Reset Success Banner */}
           {resetSuccess && (

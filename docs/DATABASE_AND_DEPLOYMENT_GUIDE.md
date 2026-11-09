@@ -363,3 +363,4 @@ The platform is designed to deploy to Vercel in two decoupled projects sharing t
    * `https://[YOUR_PORTAL_DOMAIN].vercel.app`
    * `https://[YOUR_ADMIN_DOMAIN].vercel.app`
 3. Save changes. Users can now authenticate securely across both portals.
+

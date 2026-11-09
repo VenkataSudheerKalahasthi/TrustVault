@@ -53,7 +53,11 @@ export const ResetPasswordPage: React.FC = () => {
       });
 
       if (result.status === 'complete') {
-        // Successfully reset password
+        if (result.createdSessionId) {
+          await setActive({ session: result.createdSessionId });
+          navigate('/', { replace: true });
+          return;
+        }
         navigate('/login?reset=success', { replace: true });
       } else {
         setError(`Password reset requires additional steps: ${result.status}`);

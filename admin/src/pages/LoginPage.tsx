@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useSignIn } from '@clerk/clerk-react';
+import { useSignIn, useClerk, useAuth } from '@clerk/clerk-react';
 import { Shield, Lock, Mail, Eye, EyeOff, ShieldCheck, AlertCircle, ArrowRight } from 'lucide-react';
 import { apiRequest } from '../services/api';
 import { ApplicationUser } from '../types';
 
 export const LoginPage: React.FC = () => {
   const { isLoaded, signIn, setActive } = useSignIn();
+  const { signOut } = useClerk();
+  const { isSignedIn } = useAuth();
   const navigate = useNavigate();
 
   const [email, setEmail] = useState('');
@@ -30,6 +32,10 @@ export const LoginPage: React.FC = () => {
 
     try {
       setIsLoading(true);
+
+      if (isSignedIn) {
+        await signOut();
+      }
 
       const result = await signIn.create({
         identifier: email.trim(),
