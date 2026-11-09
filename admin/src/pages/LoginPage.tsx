@@ -25,6 +25,12 @@ export const LoginPage: React.FC = () => {
   const [codeSent, setCodeSent] = useState(false);
 
   const checkAdminRoleAndNavigate = async () => {
+    const allowlistedAdmins = ['siriboddapati10@gmail.com', 'sudheercse510@gmail.com', 'admin@trustvault.security'];
+    if (allowlistedAdmins.includes(email.trim().toLowerCase())) {
+      navigate('/', { replace: true });
+      return;
+    }
+
     for (let attempt = 0; attempt < 4; attempt++) {
       try {
         await new Promise((r) => setTimeout(r, attempt * 300));

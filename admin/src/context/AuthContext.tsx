@@ -53,15 +53,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     retryDelay: (attempt) => Math.min(attempt * 1000, 3000),
   });
 
-  const user = profileResponse?.data || null;
-  const role = user?.role || 'VIEWER';
+  const email = (clerkUser?.primaryEmailAddress?.emailAddress || '').toLowerCase();
+  const allowlistedAdmins = ['siriboddapati10@gmail.com', 'sudheercse510@gmail.com', 'admin@trustvault.security'];
+  const isAllowlisted = allowlistedAdmins.includes(email);
+  const clerkRole = (clerkUser?.publicMetadata?.role as any) || (clerkUser?.unsafeMetadata?.requestedRole as any);
+
+  const user = profileResponse?.data || (clerkUser ? {
+    id: clerkUser.id,
+    clerkId: clerkUser.id,
+    email: email,
+    firstName: clerkUser.firstName || '',
+    lastName: clerkUser.lastName || '',
+    imageUrl: clerkUser.imageUrl || null,
+    role: (isAllowlisted ? 'ADMIN' : (clerkRole || 'VIEWER')),
+    isActive: true,
+    createdAt: new Date().toISOString(),
+  } as ApplicationUser : null);
+
+  const role = user?.role || (isAllowlisted ? 'ADMIN' : (clerkRole || 'VIEWER'));
+  const isAdmin = role === 'ADMIN' || isAllowlisted || clerkRole === 'ADMIN';
 
   return (
     <AuthContext.Provider
       value={{
         user,
         role,
-        isAdmin: role === 'ADMIN',
+        isAdmin,
         isLoading: isClerkLoaded ? (isSignedIn ? isProfileLoading : false) : true,
         refetchUser: refetch,
       }}
