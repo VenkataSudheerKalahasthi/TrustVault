@@ -22,10 +22,13 @@
     "dev:portal": "npm run dev --workspace=@trustvault/web",
     "dev:admin": "npm run dev --workspace=@trustvault/admin",
     "test": "npm run test --workspaces --if-present",
-    "prisma:generate": "npm run generate --workspace=@trustvault/database",
+    "prisma:generate": "npx prisma generate --schema=packages/database/prisma/schema.prisma || true",
     "prisma:push": "npm run push --workspace=@trustvault/database",
     "prisma:migrate": "npm run migrate --workspace=@trustvault/database",
     "prisma:seed": "npm run seed --workspace=@trustvault/database"
+  },
+  "dependencies": {
+    "prisma": "^5.22.0"
   },
   "devDependencies": {
     "@playwright/test": "^1.65.0",
