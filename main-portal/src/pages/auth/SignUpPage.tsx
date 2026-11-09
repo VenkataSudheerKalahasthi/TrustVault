@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useSignUp } from '@clerk/clerk-react';
+import { useSignUp, useAuth } from '@clerk/clerk-react';
 import {
   Shield,
   Eye,
@@ -21,6 +21,7 @@ import { ApplicationUser } from '../../types';
 
 export const SignUpPage: React.FC = () => {
   const { isLoaded, signUp, setActive } = useSignUp();
+  const { getToken } = useAuth();
   const navigate = useNavigate();
 
   // Form Fields
@@ -136,8 +137,17 @@ export const SignUpPage: React.FC = () => {
 
         // Synchronize requested role with backend database
         try {
+          // Poll for token readiness post session activation
+          let token: string | null = null;
+          for (let attempt = 0; attempt < 6; attempt++) {
+            await new Promise((r) => setTimeout(r, 200));
+            token = await getToken();
+            if (token) break;
+          }
+
           await apiRequest<{ success: boolean; data: ApplicationUser }>('/auth/sync', {
             method: 'POST',
+            headers: token ? { Authorization: `Bearer ${token}` } : undefined,
             body: JSON.stringify({ requestedRole: selectedRole }),
           });
         } catch (syncErr) {

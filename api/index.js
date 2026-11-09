@@ -57546,6 +57546,17 @@ async function requireAuthentication(req, res, next) {
           where: { id: user.id },
           data: { role: src_exports.UserRole.ADMIN }
         });
+      } else if (user.role === src_exports.UserRole.VIEWER) {
+        try {
+          const clerkUser = await clerkClient.users.getUser(clerkId);
+          if (clerkUser.unsafeMetadata?.requestedRole === "DOCUMENT_OWNER") {
+            user = await prisma.user.update({
+              where: { id: user.id },
+              data: { role: src_exports.UserRole.DOCUMENT_OWNER }
+            });
+          }
+        } catch {
+        }
       }
     }
     req.user = user;
@@ -69223,6 +69234,10 @@ app.use((req, res, next) => {
   const correlationId = req.headers["x-correlation-id"] || import_crypto5.default.randomUUID();
   req.id = correlationId;
   res.setHeader("X-Correlation-Id", correlationId);
+  const matchedPath = req.headers["x-matched-path"] || req.headers["x-invoke-path"];
+  if (matchedPath && (matchedPath.startsWith("/api") || matchedPath.startsWith("/v1"))) {
+    req.url = matchedPath;
+  }
   next();
 });
 if (process.env.NODE_ENV !== "test") {
@@ -69231,7 +69246,7 @@ if (process.env.NODE_ENV !== "test") {
 app.use(import_express12.default.json({ limit: "10mb" }));
 app.use(import_express12.default.urlencoded({ extended: true, limit: "10mb" }));
 app.use(standardRateLimiter);
-app.get(["/health", "/api/health"], (_req, res) => {
+app.get(["/health", "/api/health", "/api/v1/health"], (_req, res) => {
   res.json({
     status: "healthy",
     service: "TrustVault Serverless API",
@@ -69239,7 +69254,7 @@ app.get(["/health", "/api/health"], (_req, res) => {
     environment: process.env.NODE_ENV || "production"
   });
 });
-app.use("/api/v1", routes_default);
+app.use(["/api/v1", "/v1"], routes_default);
 app.use((req, res) => {
   res.status(404).json({
     success: false,

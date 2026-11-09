@@ -12,9 +12,9 @@
   "scripts": {
     "build": "npm run build --workspaces --if-present",
     "build:packages": "npm run build --workspace=@trustvault/shared && npm run prisma:generate",
-    "build:api": "esbuild backend/src/serverless.ts --bundle --platform=node --target=node18 --format=cjs --external:@prisma/client --alias:@trustvault/shared=./packages/shared/src/index.ts --alias:@trustvault/database=./packages/database/src/index.ts --outfile=api/index.js",
+    "build:api": "esbuild backend/src/serverless.ts --bundle --platform=node --target=node18 --format=cjs --external:@prisma/client --alias:@trustvault/shared=./packages/shared/src/index.ts --alias:@trustvault/database=./packages/database/src/index.ts --outfile=api/index.js && node -e \"const fs=require('fs'); if (!fs.existsSync('admin/api')) fs.mkdirSync('admin/api', {recursive:true}); fs.copyFileSync('api/index.js', 'admin/api/index.js');\"",
     "build:web": "npm run build:packages && npm run build:api && npm run build --workspace=@trustvault/web",
-    "build:admin": "npm run build:packages && npm run build --workspace=@trustvault/admin",
+    "build:admin": "npm run build:packages && npm run build:api && npm run build --workspace=@trustvault/admin",
     "postinstall": "npm run prisma:generate",
     "dev:backend": "npm run dev --workspace=@trustvault/api",
     "dev:api": "npm run dev --workspace=@trustvault/api",

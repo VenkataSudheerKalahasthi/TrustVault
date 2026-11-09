@@ -55,6 +55,16 @@ app.use((req, res, next) => {
   const correlationId = (req.headers['x-correlation-id'] as string) || crypto.randomUUID();
   req.id = correlationId;
   res.setHeader('X-Correlation-Id', correlationId);
+
+  // Normalize Vercel serverless request URL when rewrites are applied
+  const matchedPath =
+    (req.headers['x-matched-path'] as string) ||
+    (req.headers['x-invoke-path'] as string);
+
+  if (matchedPath && (matchedPath.startsWith('/api') || matchedPath.startsWith('/v1'))) {
+    req.url = matchedPath;
+  }
+
   next();
 });
 
@@ -71,7 +81,7 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(standardRateLimiter);
 
 // Direct Health Check endpoints
-app.get(['/health', '/api/health'], (_req, res) => {
+app.get(['/health', '/api/health', '/api/v1/health'], (_req, res) => {
   res.json({
     status: 'healthy',
     service: 'TrustVault Serverless API',
@@ -80,8 +90,8 @@ app.get(['/health', '/api/health'], (_req, res) => {
   });
 });
 
-// Mount API version 1
-app.use('/api/v1', apiRouter);
+// Mount API version 1 on both /api/v1 and /v1 (to accommodate all proxy/rewrite configurations)
+app.use(['/api/v1', '/v1'], apiRouter);
 
 // 404 Handler
 app.use((req, res) => {

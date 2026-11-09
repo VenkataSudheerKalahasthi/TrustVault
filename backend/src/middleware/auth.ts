@@ -238,6 +238,19 @@ export async function requireAuthentication(
           where: { id: user.id },
           data: { role: UserRole.ADMIN },
         });
+      } else if (user.role === UserRole.VIEWER) {
+        // If user selected DOCUMENT_OWNER during registration in Clerk, synchronize role to DOCUMENT_OWNER
+        try {
+          const clerkUser = await clerkClient.users.getUser(clerkId);
+          if (clerkUser.unsafeMetadata?.requestedRole === 'DOCUMENT_OWNER') {
+            user = await prisma.user.update({
+              where: { id: user.id },
+              data: { role: UserRole.DOCUMENT_OWNER },
+            });
+          }
+        } catch {
+          // ignore Clerk lookup errors
+        }
       }
     }
 

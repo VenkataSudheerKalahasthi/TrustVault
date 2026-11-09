@@ -25,16 +25,22 @@ export const LoginPage: React.FC = () => {
   const [codeSent, setCodeSent] = useState(false);
 
   const checkAdminRoleAndNavigate = async () => {
-    try {
-      const profile = await apiRequest<{ success: boolean; data: ApplicationUser }>('/auth/me');
-      if (profile?.data?.role === 'ADMIN') {
-        navigate('/', { replace: true });
-      } else {
-        navigate('/unauthorized', { replace: true });
+    for (let attempt = 0; attempt < 4; attempt++) {
+      try {
+        await new Promise((r) => setTimeout(r, attempt * 300));
+        const profile = await apiRequest<{ success: boolean; data: ApplicationUser }>('/auth/me');
+        if (profile?.data?.role === 'ADMIN') {
+          navigate('/', { replace: true });
+          return;
+        } else if (profile?.data?.role) {
+          navigate('/unauthorized', { replace: true });
+          return;
+        }
+      } catch (err) {
+        console.warn(`[CHECK_ADMIN_ROLE_ATTEMPT_${attempt + 1}]`, err);
       }
-    } catch {
-      navigate('/', { replace: true });
     }
+    navigate('/', { replace: true });
   };
 
   const prepareSecondFactorVerification = async (currentSignIn: any) => {
