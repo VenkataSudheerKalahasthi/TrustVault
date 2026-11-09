@@ -5,17 +5,21 @@
   "description": "Enterprise Document Sharing with Verifiable Audit Trail",
   "workspaces": [
     "packages/*",
-    "apps/*"
+    "backend",
+    "admin",
+    "main-portal"
   ],
   "scripts": {
     "build": "npm run build --workspaces --if-present",
     "build:packages": "npm run build --workspace=@trustvault/shared && npm run prisma:generate",
-    "build:api": "esbuild apps/api/src/serverless.ts --bundle --platform=node --target=node18 --format=cjs --external:@prisma/client --alias:@trustvault/shared=./packages/shared/src/index.ts --alias:@trustvault/database=./packages/database/src/index.ts --outfile=api/index.js",
+    "build:api": "esbuild backend/src/serverless.ts --bundle --platform=node --target=node18 --format=cjs --external:@prisma/client --alias:@trustvault/shared=./packages/shared/src/index.ts --alias:@trustvault/database=./packages/database/src/index.ts --outfile=api/index.js",
     "build:web": "npm run build:packages && npm run build:api && npm run build --workspace=@trustvault/web",
     "build:admin": "npm run build:packages && npm run build --workspace=@trustvault/admin",
     "postinstall": "npm run prisma:generate",
+    "dev:backend": "npm run dev --workspace=@trustvault/api",
     "dev:api": "npm run dev --workspace=@trustvault/api",
     "dev:web": "npm run dev --workspace=@trustvault/web",
+    "dev:portal": "npm run dev --workspace=@trustvault/web",
     "dev:admin": "npm run dev --workspace=@trustvault/admin",
     "test": "npm run test --workspaces --if-present",
     "prisma:generate": "npm run generate --workspace=@trustvault/database",

@@ -3,6 +3,7 @@ import path from 'path';
 import dotenv from 'dotenv';
 
 dotenv.config({ path: path.resolve(__dirname, 'packages/database/.env') });
+dotenv.config({ path: path.resolve(__dirname, 'backend/.env') });
 dotenv.config({ path: path.resolve(__dirname, 'apps/api/.env') });
 
 export default defineConfig({

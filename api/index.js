@@ -47147,14 +47147,14 @@ var require_multer = __commonJS({
   }
 });
 
-// apps/api/src/serverless.ts
+// backend/src/serverless.ts
 var serverless_exports = {};
 __export(serverless_exports, {
   default: () => serverless_default
 });
 module.exports = __toCommonJS(serverless_exports);
 
-// apps/api/src/app.ts
+// backend/src/app.ts
 var import_express12 = __toESM(require_express2());
 
 // node_modules/helmet/index.mjs
@@ -47724,15 +47724,15 @@ var helmet = Object.assign(
   }
 );
 
-// apps/api/src/app.ts
+// backend/src/app.ts
 var import_cors = __toESM(require_lib3());
 var import_morgan = __toESM(require_morgan());
 var import_crypto5 = __toESM(require("crypto"));
 
-// apps/api/src/routes.ts
+// backend/src/routes.ts
 var import_express11 = __toESM(require_express2());
 
-// apps/api/src/modules/health/health.routes.ts
+// backend/src/modules/health/health.routes.ts
 var import_express = __toESM(require_express2());
 
 // packages/database/src/index.ts
@@ -47747,6 +47747,7 @@ __reExport(src_exports, require("@prisma/client"));
 import_dotenv.default.config({ path: import_path.default.resolve(__dirname, "../.env") });
 import_dotenv.default.config({ path: import_path.default.resolve(process.cwd(), ".env") });
 import_dotenv.default.config({ path: import_path.default.resolve(process.cwd(), "packages/database/.env") });
+import_dotenv.default.config({ path: import_path.default.resolve(process.cwd(), "backend/.env") });
 import_dotenv.default.config({ path: import_path.default.resolve(process.cwd(), "apps/api/.env") });
 var prisma = global.prisma || new import_client.PrismaClient({
   datasources: process.env.DATABASE_URL ? { db: { url: process.env.DATABASE_URL } } : void 0,
@@ -47756,7 +47757,7 @@ if (process.env.NODE_ENV !== "production") {
   global.prisma = prisma;
 }
 
-// apps/api/src/modules/health/health.routes.ts
+// backend/src/modules/health/health.routes.ts
 var router = (0, import_express.Router)();
 router.get("/health", (_req, res) => {
   return res.json({
@@ -47787,10 +47788,10 @@ router.get("/health/database", async (_req, res) => {
 });
 var health_routes_default = router;
 
-// apps/api/src/modules/auth/auth.routes.ts
+// backend/src/modules/auth/auth.routes.ts
 var import_express2 = __toESM(require_express2());
 
-// apps/api/src/config/env.ts
+// backend/src/config/env.ts
 var import_dotenv2 = __toESM(require_main());
 var import_path2 = __toESM(require("path"));
 
@@ -51835,9 +51836,11 @@ var coerce = {
 };
 var NEVER = INVALID;
 
-// apps/api/src/config/env.ts
+// backend/src/config/env.ts
 import_dotenv2.default.config({ path: import_path2.default.resolve(__dirname, "../../.env") });
-import_dotenv2.default.config({ path: import_path2.default.resolve(__dirname, "../../../../.env") });
+import_dotenv2.default.config({ path: import_path2.default.resolve(__dirname, "../../../.env") });
+import_dotenv2.default.config({ path: import_path2.default.resolve(process.cwd(), ".env") });
+import_dotenv2.default.config({ path: import_path2.default.resolve(process.cwd(), "backend/.env") });
 var envSchema = external_exports.object({
   NODE_ENV: external_exports.enum(["development", "test", "production"]).default("development"),
   PORT: external_exports.coerce.number().default(5001),
@@ -51909,7 +51912,7 @@ function getAdminEmailAllowlist() {
   );
 }
 
-// apps/api/src/modules/auth/auth.controller.ts
+// backend/src/modules/auth/auth.controller.ts
 var AuthController = class {
   static async getMe(req, res, next) {
     try {
@@ -57358,11 +57361,11 @@ function createClerkClient(options) {
   };
 }
 
-// apps/api/src/config/clerk.ts
+// backend/src/config/clerk.ts
 var isClerkConfigured = Boolean(env.CLERK_SECRET_KEY);
 var clerkClient = isClerkConfigured ? createClerkClient({ secretKey: env.CLERK_SECRET_KEY, publishableKey: env.CLERK_PUBLISHABLE_KEY }) : null;
 
-// apps/api/src/middleware/auth.ts
+// backend/src/middleware/auth.ts
 async function requireAuthentication(req, res, next) {
   try {
     const authHeader = req.headers.authorization;
@@ -57552,7 +57555,7 @@ async function requireAuthentication(req, res, next) {
   }
 }
 
-// apps/api/src/utils/hash.ts
+// backend/src/utils/hash.ts
 var import_crypto2 = __toESM(require("crypto"));
 function calculateFileHash(buffer) {
   return import_crypto2.default.createHash("sha256").update(buffer).digest("hex");
@@ -57570,7 +57573,7 @@ function calculateAuditHash(params) {
   return import_crypto2.default.createHash("sha256").update(content).digest("hex");
 }
 
-// apps/api/src/modules/audit/audit.service.ts
+// backend/src/modules/audit/audit.service.ts
 var logMutex = Promise.resolve();
 async function logAuditEvent(params, tx) {
   const previousOp = logMutex;
@@ -57725,7 +57728,7 @@ async function verifyAuditLogChain() {
   return { isValid: true, totalVerified: logs.length };
 }
 
-// apps/api/src/middleware/rbac.ts
+// backend/src/middleware/rbac.ts
 async function requireActiveUser(req, res, next) {
   if (!req.user) {
     return res.status(401).json({
@@ -57783,13 +57786,13 @@ function requireRole(...allowedRoles) {
   };
 }
 
-// apps/api/src/modules/auth/auth.routes.ts
+// backend/src/modules/auth/auth.routes.ts
 var router2 = (0, import_express2.Router)();
 router2.get("/me", requireAuthentication, requireActiveUser, AuthController.getMe);
 router2.post("/sync", requireAuthentication, requireActiveUser, AuthController.syncProfile);
 var auth_routes_default = router2;
 
-// apps/api/src/modules/users/users.routes.ts
+// backend/src/modules/users/users.routes.ts
 var import_express3 = __toESM(require_express2());
 
 // packages/shared/src/index.ts
@@ -57883,7 +57886,7 @@ var AuditLogQuerySchema = PaginationQuerySchema.extend({
   dateTo: external_exports.string().datetime().optional()
 });
 
-// apps/api/src/modules/users/users.controller.ts
+// backend/src/modules/users/users.controller.ts
 var UsersController = class {
   static async list(req, res, next) {
     try {
@@ -58072,7 +58075,7 @@ var UsersController = class {
   }
 };
 
-// apps/api/src/modules/users/users.routes.ts
+// backend/src/modules/users/users.routes.ts
 var router3 = (0, import_express3.Router)();
 router3.use(requireAuthentication, requireActiveUser);
 router3.get("/", UsersController.list);
@@ -58081,7 +58084,7 @@ router3.patch("/:id/role", UsersController.updateRole);
 router3.patch("/:id/status", requireRole(src_exports.UserRole.ADMIN), UsersController.updateStatus);
 var users_routes_default = router3;
 
-// apps/api/src/modules/documents/documents.routes.ts
+// backend/src/modules/documents/documents.routes.ts
 var import_express4 = __toESM(require_express2());
 
 // node_modules/@supabase/supabase-js/dist/index.mjs
@@ -66313,7 +66316,7 @@ function shouldShowDeprecationWarning() {
 }
 if (shouldShowDeprecationWarning()) console.warn("\u26A0\uFE0F  Node.js 20 and below are deprecated and will no longer be supported in future versions of @supabase/supabase-js. Please upgrade to Node.js 22 or later. For more information, visit: https://github.com/orgs/supabase/discussions/45715");
 
-// apps/api/src/config/supabase.ts
+// backend/src/config/supabase.ts
 var isStorageConfigured = Boolean(
   env.SUPABASE_URL && env.SUPABASE_URL !== "https://placeholder.supabase.co" && !env.SUPABASE_URL.includes("YOUR_PROJECT_ID") && env.SUPABASE_SERVICE_ROLE_KEY && !env.SUPABASE_SERVICE_ROLE_KEY.includes("REPLACE_WITH_")
 );
@@ -66324,7 +66327,7 @@ var supabaseAdmin = isStorageConfigured ? createClient(env.SUPABASE_URL, env.SUP
   }
 }) : null;
 
-// apps/api/src/modules/storage/storage.service.ts
+// backend/src/modules/storage/storage.service.ts
 var import_crypto3 = __toESM(require("crypto"));
 var localBufferStore = /* @__PURE__ */ new Map();
 var StorageService = class {
@@ -66383,7 +66386,7 @@ var StorageService = class {
   }
 };
 
-// apps/api/src/modules/documents/documents.upload.ts
+// backend/src/modules/documents/documents.upload.ts
 var import_multer = __toESM(require_multer());
 var import_path3 = __toESM(require("path"));
 var MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024;
@@ -66455,7 +66458,7 @@ function validateFileSignature(buffer, originalName, mimeType) {
   return { isValid: true };
 }
 
-// apps/api/src/modules/documents/documents.service.ts
+// backend/src/modules/documents/documents.service.ts
 var import_crypto4 = __toESM(require("crypto"));
 var DocumentsService = class {
   /**
@@ -66800,7 +66803,7 @@ var DocumentsService = class {
   }
 };
 
-// apps/api/src/modules/documents/documents.controller.ts
+// backend/src/modules/documents/documents.controller.ts
 var DocumentsController = class {
   static async upload(req, res, next) {
     try {
@@ -66928,7 +66931,7 @@ var DocumentsController = class {
   }
 };
 
-// apps/api/src/middleware/documentAuth.ts
+// backend/src/middleware/documentAuth.ts
 function requireDocumentPermission(operation) {
   return async (req, res, next) => {
     try {
@@ -67875,7 +67878,7 @@ var rateLimit = (passedOptions) => {
 };
 var lib_default = rateLimit;
 
-// apps/api/src/middleware/rateLimiter.ts
+// backend/src/middleware/rateLimiter.ts
 var standardRateLimiter = lib_default({
   windowMs: 15 * 60 * 1e3,
   // 15 minutes
@@ -67907,7 +67910,7 @@ var strictRateLimiter = lib_default({
   }
 });
 
-// apps/api/src/modules/documents/documents.routes.ts
+// backend/src/modules/documents/documents.routes.ts
 var router4 = (0, import_express4.Router)();
 router4.use(requireAuthentication, requireActiveUser);
 router4.post(
@@ -67926,10 +67929,10 @@ router4.get("/:id/content", requireDocumentPermission("READ"), DocumentsControll
 router4.get("/:id/download", requireDocumentPermission("DOWNLOAD"), DocumentsController.streamDownload);
 var documents_routes_default = router4;
 
-// apps/api/src/modules/permissions/permissions.routes.ts
+// backend/src/modules/permissions/permissions.routes.ts
 var import_express5 = __toESM(require_express2());
 
-// apps/api/src/modules/permissions/permissions.service.ts
+// backend/src/modules/permissions/permissions.service.ts
 var PermissionsService = class {
   /**
    * Share document with a registered user (Grant Read or Edit)
@@ -68061,7 +68064,7 @@ var PermissionsService = class {
   }
 };
 
-// apps/api/src/modules/permissions/permissions.controller.ts
+// backend/src/modules/permissions/permissions.controller.ts
 var PermissionsController = class {
   static async grant(req, res, next) {
     try {
@@ -68119,7 +68122,7 @@ var PermissionsController = class {
   }
 };
 
-// apps/api/src/modules/permissions/permissions.routes.ts
+// backend/src/modules/permissions/permissions.routes.ts
 var router5 = (0, import_express5.Router)({ mergeParams: true });
 router5.use(requireAuthentication, requireActiveUser);
 router5.post("/", strictRateLimiter, requireDocumentPermission("OWNER"), PermissionsController.grant);
@@ -68128,10 +68131,10 @@ router5.delete("/:permissionId", requireDocumentPermission("OWNER"), Permissions
 router5.patch("/:permissionId/revoke", requireDocumentPermission("OWNER"), PermissionsController.revoke);
 var permissions_routes_default = router5;
 
-// apps/api/src/modules/categories/categories.routes.ts
+// backend/src/modules/categories/categories.routes.ts
 var import_express6 = __toESM(require_express2());
 
-// apps/api/src/modules/categories/categories.controller.ts
+// backend/src/modules/categories/categories.controller.ts
 var CategoriesController = class {
   static async list(_req, res, next) {
     try {
@@ -68216,7 +68219,7 @@ var CategoriesController = class {
   }
 };
 
-// apps/api/src/modules/categories/categories.routes.ts
+// backend/src/modules/categories/categories.routes.ts
 var router6 = (0, import_express6.Router)();
 router6.use(requireAuthentication, requireActiveUser);
 router6.get("/", CategoriesController.list);
@@ -68225,10 +68228,10 @@ router6.patch("/:id", requireRole(src_exports.UserRole.ADMIN, src_exports.UserRo
 router6.delete("/:id", requireRole(src_exports.UserRole.ADMIN), CategoriesController.delete);
 var categories_routes_default = router6;
 
-// apps/api/src/modules/audit/audit.routes.ts
+// backend/src/modules/audit/audit.routes.ts
 var import_express7 = __toESM(require_express2());
 
-// apps/api/src/modules/audit/audit.controller.ts
+// backend/src/modules/audit/audit.controller.ts
 var AuditController = class {
   static async list(req, res, next) {
     try {
@@ -68340,7 +68343,7 @@ var AuditController = class {
   }
 };
 
-// apps/api/src/modules/audit/audit.routes.ts
+// backend/src/modules/audit/audit.routes.ts
 var router7 = (0, import_express7.Router)();
 router7.use(requireAuthentication, requireActiveUser);
 router7.get("/", requireRole(src_exports.UserRole.ADMIN, src_exports.UserRole.DOCUMENT_OWNER), AuditController.list);
@@ -68351,10 +68354,10 @@ router7.patch("/:id", AuditController.rejectTamperAttempt);
 router7.delete("/:id", AuditController.rejectTamperAttempt);
 var audit_routes_default = router7;
 
-// apps/api/src/modules/admin/admin.routes.ts
+// backend/src/modules/admin/admin.routes.ts
 var import_express8 = __toESM(require_express2());
 
-// apps/api/src/modules/admin/admin.controller.ts
+// backend/src/modules/admin/admin.controller.ts
 var AdminProfileUpdateSchema = external_exports.object({
   firstName: external_exports.string().min(1, "First name is required").max(50),
   lastName: external_exports.string().max(50).optional().nullable()
@@ -68777,7 +68780,7 @@ var AdminController = class {
   }
 };
 
-// apps/api/src/modules/admin/admin.routes.ts
+// backend/src/modules/admin/admin.routes.ts
 var router8 = (0, import_express8.Router)();
 router8.use(requireAuthentication, requireActiveUser, requireRole(src_exports.UserRole.ADMIN));
 router8.get("/dashboard", AdminController.getDashboardStats);
@@ -68794,10 +68797,10 @@ router8.get("/profile", AdminController.getAdminProfile);
 router8.patch("/profile", AdminController.updateAdminProfile);
 var admin_routes_default = router8;
 
-// apps/api/src/modules/search/search.routes.ts
+// backend/src/modules/search/search.routes.ts
 var import_express9 = __toESM(require_express2());
 
-// apps/api/src/modules/search/search.controller.ts
+// backend/src/modules/search/search.controller.ts
 var SearchController = class {
   static async search(req, res, next) {
     try {
@@ -68890,16 +68893,16 @@ var SearchController = class {
   }
 };
 
-// apps/api/src/modules/search/search.routes.ts
+// backend/src/modules/search/search.routes.ts
 var router9 = (0, import_express9.Router)();
 router9.use(requireAuthentication, requireActiveUser);
 router9.get("/", SearchController.search);
 var search_routes_default = router9;
 
-// apps/api/src/modules/ai-suggestions/aiSuggestions.routes.ts
+// backend/src/modules/ai-suggestions/aiSuggestions.routes.ts
 var import_express10 = __toESM(require_express2());
 
-// apps/api/src/modules/ai-suggestions/aiSuggestions.service.ts
+// backend/src/modules/ai-suggestions/aiSuggestions.service.ts
 var AISuggestionsService = class {
   /**
    * Generates document access suggestions based strictly on permitted metadata
@@ -69082,7 +69085,7 @@ var AISuggestionsService = class {
   }
 };
 
-// apps/api/src/modules/ai-suggestions/aiSuggestions.controller.ts
+// backend/src/modules/ai-suggestions/aiSuggestions.controller.ts
 var AISuggestionsController = class {
   static async generate(req, res, next) {
     try {
@@ -69130,7 +69133,7 @@ var AISuggestionsController = class {
   }
 };
 
-// apps/api/src/modules/ai-suggestions/aiSuggestions.routes.ts
+// backend/src/modules/ai-suggestions/aiSuggestions.routes.ts
 var router10 = (0, import_express10.Router)();
 router10.use(requireAuthentication, requireActiveUser);
 router10.post("/documents/:id/ai-suggestions", strictRateLimiter, requireDocumentPermission("OWNER"), AISuggestionsController.generate);
@@ -69138,7 +69141,7 @@ router10.get("/documents/:id/ai-suggestions", requireDocumentPermission("OWNER")
 router10.post("/ai-suggestions/:id/decision", strictRateLimiter, AISuggestionsController.processDecision);
 var aiSuggestions_routes_default = router10;
 
-// apps/api/src/routes.ts
+// backend/src/routes.ts
 var apiRouter = (0, import_express11.Router)();
 apiRouter.use("/", health_routes_default);
 apiRouter.use("/auth", auth_routes_default);
@@ -69152,7 +69155,7 @@ apiRouter.use("/search", search_routes_default);
 apiRouter.use("/", aiSuggestions_routes_default);
 var routes_default = apiRouter;
 
-// apps/api/src/middleware/errorHandler.ts
+// backend/src/middleware/errorHandler.ts
 function errorHandler(err, req, res, next) {
   const correlationId = req.headers["x-correlation-id"] || req.id || "N/A";
   const statusCode = err.statusCode || (err instanceof ZodError ? 400 : 500);
@@ -69184,7 +69187,7 @@ function errorHandler(err, req, res, next) {
   });
 }
 
-// apps/api/src/app.ts
+// backend/src/app.ts
 var app = (0, import_express12.default)();
 app.use(
   helmet({
@@ -69249,7 +69252,7 @@ app.use((req, res) => {
 });
 app.use(errorHandler);
 
-// apps/api/src/serverless.ts
+// backend/src/serverless.ts
 var serverless_default = app;
 /*! Bundled license information:
 

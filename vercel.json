@@ -1,7 +1,7 @@
 {
   "version": 2,
   "buildCommand": "npm run build:web",
-  "outputDirectory": "apps/web/dist",
+  "outputDirectory": "main-portal/dist",
   "rewrites": [
     {
       "source": "/api/(.*)",

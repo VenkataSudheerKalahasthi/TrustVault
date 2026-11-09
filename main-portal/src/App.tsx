@@ -3,7 +3,6 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { SignedIn, SignedOut } from '@clerk/clerk-react';
 import { AuthProvider, useAppAuth } from './context/AuthContext';
 import { AppLayout } from './layouts/AppLayout';
-import { AdminLayout } from './layouts/AdminLayout';
 import { HomePage } from './pages/HomePage';
 import { LoginPage } from './pages/auth/LoginPage';
 import { SignUpPage } from './pages/auth/SignUpPage';
@@ -13,20 +12,25 @@ import { MyDocumentsPage } from './pages/owner/MyDocumentsPage';
 import { UploadDocumentPage } from './pages/owner/UploadDocumentPage';
 import { AISuggestionsPage } from './pages/owner/AISuggestionsPage';
 import { ViewerDashboardPage } from './pages/viewer/ViewerDashboardPage';
-import { AdminDashboardPage } from './pages/admin/AdminDashboardPage';
-import { UserManagementPage } from './pages/admin/UserManagementPage';
-import { AuditLogsPage } from './pages/admin/AuditLogsPage';
-import { AdminDocumentsPage } from './pages/admin/AdminDocumentsPage';
-import { AdminPermissionsPage } from './pages/admin/AdminPermissionsPage';
-import { AdminSecurityPage } from './pages/admin/AdminSecurityPage';
-import { AdminCategoriesPage } from './pages/admin/AdminCategoriesPage';
-import { AdminSettingsPage } from './pages/admin/AdminSettingsPage';
-import { AdminProfilePage } from './pages/admin/AdminProfilePage';
+import { AuditLogsPage } from './pages/owner/AuditLogsPage';
 import { SearchPage } from './pages/search/SearchPage';
 import { CategoriesPage } from './pages/categories/CategoriesPage';
 import { PrivacyPolicyPage } from './pages/legal/PrivacyPolicyPage';
 import { TermsPage } from './pages/legal/TermsPage';
 import { ShieldAlert } from 'lucide-react';
+
+const AdminRedirect: React.FC = () => {
+  React.useEffect(() => {
+    const adminUrl = import.meta.env.VITE_ADMIN_PORTAL_URL || 'http://localhost:5174';
+    window.location.href = adminUrl;
+  }, []);
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-slate-900 text-slate-400 font-mono text-xs">
+      Redirecting to TrustVault Dedicated Admin Portal...
+    </div>
+  );
+};
 
 const RoleGuard: React.FC<{
   allowedRoles: Array<'ADMIN' | 'DOCUMENT_OWNER' | 'VIEWER'>;
@@ -73,35 +77,8 @@ export const App: React.FC = () => {
         <Route path="/forgot-password/*" element={<ForgotPasswordPage />} />
         <Route path="/reset-password/*" element={<ResetPasswordPage />} />
 
-        {/* Dedicated Admin Portal Routes (Strictly ADMIN only with AdminLayout) */}
-        <Route
-          path="/admin/*"
-          element={
-            <>
-              <SignedIn>
-                <AuthProvider>
-                  <RoleGuard allowedRoles={['ADMIN']}>
-                    <AdminLayout />
-                  </RoleGuard>
-                </AuthProvider>
-              </SignedIn>
-              <SignedOut>
-                <Navigate to="/login" replace />
-              </SignedOut>
-            </>
-          }
-        >
-          <Route index element={<AdminDashboardPage />} />
-          <Route path="users" element={<UserManagementPage />} />
-          <Route path="documents" element={<AdminDocumentsPage />} />
-          <Route path="permissions" element={<AdminPermissionsPage />} />
-          <Route path="audit-logs" element={<AuditLogsPage />} />
-          <Route path="security" element={<AdminSecurityPage />} />
-          <Route path="categories" element={<AdminCategoriesPage />} />
-          <Route path="settings" element={<AdminSettingsPage />} />
-          <Route path="profile" element={<AdminProfilePage />} />
-          <Route path="*" element={<Navigate to="/admin" replace />} />
-        </Route>
+        {/* Dedicated Admin Portal Route (Redirects to Dedicated Admin Portal) */}
+        <Route path="/admin/*" element={<AdminRedirect />} />
 
         {/* Protected App Routes (Standard Vault Layout) */}
         <Route

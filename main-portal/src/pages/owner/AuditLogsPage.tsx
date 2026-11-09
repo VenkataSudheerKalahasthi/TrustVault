@@ -174,7 +174,7 @@ export const AuditLogsPage: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {logs.map((log) => (
+                {logs.map((log: AuditLogItem) => (
                   <tr key={log.id} className="hover:bg-slate-50/80 transition-colors">
                     <td className="px-5 py-4 font-bold text-slate-600">#{log.sequenceNumber}</td>
                     <td className="px-5 py-4 font-sans font-medium text-slate-900">
